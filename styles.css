@@ -27,6 +27,7 @@ h2{font-size:1.35rem}
 .how{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px}
 .small{font-size:.9rem;color:var(--muted)}
 .note{background:#fff8e6;border:1px solid #f0d9a0;border-left:4px solid var(--amber);border-radius:8px;padding:12px 14px;margin:14px 0}
+.report-header{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:12px 14px;margin:14px 0}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 10px}
 .toolbar input{flex:1;min-width:220px;padding:11px 12px;font-size:1rem;border:1px solid var(--line);border-radius:9px;background:#fff}
 .toolbar button,.chip{padding:9px 13px;font-size:.95rem;border:1px solid var(--line);border-radius:999px;background:#fff;cursor:pointer}
