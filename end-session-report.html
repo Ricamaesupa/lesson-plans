@@ -21,46 +21,270 @@
 <tr><td>Tue 17 Nov 2026, 3:30&ndash;5:00pm</td><td>Yim</td><td>Minecraft Education, Enthusiast — Pattern Tower (MakeCode blocks)</td><td>Submitted, report #1 in his list. Pattern Tower already PASSED in CIY; Enthusiast 33%.</td></tr>
 <tr><td>Tue 17 Nov 2026, 3:30&ndash;5:00pm</td><td>Harrison</td><td>Minecraft Education, Apprentice — Endless Stairs (MakeCode blocks)</td><td>Submitted, report #1 in his list. Endless Stairs already PASSED in CIY; Apprentice 17%.</td></tr>
 </table>
-<h2>MIT App Inventor — Game Curriculum</h2>
-<p class="lede">The levels the session reports follow. 6 levels, 5 mini projects + 1 capstone game per level, 36 projects in total — game development only, all block-based, no text programming.</p>
-<p>Each project has a game idea, what you learn, Components, Blocks, how to test, and a success check. Suggested pacing: 2 sessions per mini project, 4 per capstone — 14 sessions per level, 84 sessions for the whole curriculum. Draft 18 Nov 2026 — it will be updated to match the curriculum in the CIY system.</p>
-<table class="ctable"><tr><th>Level</th><th>Theme</th><th>Mini projects</th><th>Capstone</th></tr>
-<tr><td>1 Apprentice</td><td>First games</td><td>Tap the Button, Tap Counter, Colour Match, Catch the Falling Star, Quiz Game</td><td>My First Arcade</td></tr>
-<tr><td>2 Enthusiast</td><td>Games with score + levels</td><td>Memory Match, Maze Runner, Space Shooter Lite, Racing Game, Snake Lite</td><td>Arcade Collection</td></tr>
-<tr><td>3 Professional</td><td>Platform + physics games</td><td>Platformer Basics, Breakout, Tower Defence Lite, Physics Ball Game, Pass-and-Play Battle</td><td>Platform Adventure</td></tr>
-<tr><td>4 Master</td><td>Data, save + smart games</td><td>RPG Battle Lite, Endless Runner, Puzzle Levels with Save, AI Opponent Game, Physics Puzzle</td><td>Full Adventure RPG</td></tr>
-<tr><td>5 Boss</td><td>Connected + real-time games</td><td>Bluetooth Battle, Web Leaderboard Game, Sensor Race, API Quiz Game, Real-Time Duel</td><td>Online Multiplayer Game</td></tr>
-<tr><td>6 GOAT</td><td>Publish a real game</td><td>Game Engine Tools, Sensor / AR Game, ML Game, Game with Shop / Coins, Studio Game</td><td>Publish Your Own Game</td></tr>
-</table>
-<h3>Level 1 — Apprentice</h3>
-<p><strong>Who it is for:</strong> First games. No experience needed. Designer + Blocks basics, events, variables, simple conditionals.</p>
-<p><strong>Skills by the end:</strong> Button / Label / Image, <code>when Button.Click</code>, variables, <code>if</code>, timers, sounds, one screen per game.</p>
-<h3>Level 2 — Enthusiast</h3>
-<p><strong>Who it is for:</strong> Finished Apprentice capstone. Ready for score + lives + levels.</p>
-<p><strong>Skills by the end:</strong> Lists + TinyDB, Canvas + sprites + collision, Clock speed, levels, sounds, multi-screen.</p>
-<h3>Level 3 — Professional</h3>
-<p><strong>Who it is for:</strong> Finished Enthusiast capstone. Ready for gravity, physics, and pass-and-play.</p>
-<p><strong>Skills by the end:</strong> Gravity / jump, platform collision, Breakout physics, tower defence waves, procedures, pass-and-play.</p>
-<h3>Level 4 — Master</h3>
-<p><strong>Who it is for:</strong> Finished Professional capstone. Ready for data, save systems, and smart opponents.</p>
-<p><strong>Skills by the end:</strong> TinyDB save / load, lists + sorting (insertion order — no true sort block), procedures with return, AI opponent (rule-based), Canvas charts (draw blocks — no chart component exists).</p>
-<h3>Level 5 — Boss</h3>
-<p><strong>Who it is for:</strong> Finished Master capstone. Ready for connected, real-time, and data games.</p>
-<p><strong>Skills by the end:</strong> Bluetooth (2 phones), Web APIs (no-key), sensors, real-time play, leaderboards (local + Web with fallback).</p>
-<h3>Level 6 — GOAT</h3>
-<p><strong>Who it is for:</strong> Finished Boss capstone. Ready to build, polish, and publish a real game.</p>
-<p><strong>Skills by the end:</strong> Game tools, sensors / ML (exploration), shop / coins, studio workflow, publishing, portfolio.</p>
-<h3>When to move up a level</h3>
+<h2>Aom — Figma &amp; Website Development: 25 Future Sessions</h2>
+<p class="lede">25 future sessions &middot; Saturdays 9:00&ndash;10:30am &middot; 90 minutes each &middot; 19 Dec 2026 &ndash; 5 Jun 2027 &middot; 37.5 hours total. Finish Website 1 and publish it live, then build Website 2, a portfolio and a blog page, and finish with a showcase.</p>
+<div class="note"><strong>Before these start:</strong> the 3 sessions left come first (Sat 28 Nov Figma finalise, Sat 5 Dec Figma mobile + HTML skeleton, Sat 12 Dec homepage + CSS showcase). These 25 future sessions start only if they are confirmed. <strong>Still to confirm:</strong> her mockup topic — Home / About / Gallery / Contact is a working structure, not her real page names; Website 2&rsquo;s topic is her choice; publishing method (GitHub Pages or Netlify Drop) is Rica&rsquo;s call on the day.</div>
+<section>
+<details class="session" id="aom-s1" data-search="1 css: header, hero, buttons + grid cards sat 19 dec 2026 website 1  css: header, hero, buttons + grid cards figma &amp; website development" data-date="2026-12-19">
+<summary><span class="s-num">Session 1</span><span class="s-title">CSS: Header, hero, buttons + Grid cards</span><span class="s-date">Sat 19 Dec 2026</span></summary>
+<div class="s-meta">Sat 19 Dec 2026 | Website 1</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Style header/hero/buttons and lay out cards in a Grid to match Figma. <strong>Materials:</strong> VS Code, Figma. <strong>Components / codes:</strong></p>
+<pre><code>.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+.card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+.card img { width: 100%; height: 200px; object-fit: cover; }
+.btn:hover { opacity: 0.85; }</code></pre>
+<p><strong>Step-by-step:</strong> Style header/nav with Flexbox, hero, <code>.btn</code> + hover + <code>.btn-secondary</code> if Figma has one. Grid 3 columns, gap 24px. Style card + footer. Screenshot Figma vs live, fix 3 differences. <strong>Test:</strong> Nav in one line, cards in 3 columns, images not stretched, buttons change on hover. <strong>Success check:</strong> Homepage header + hero + cards match Figma at a glance. <strong>Homework:</strong> Note 3 spacing differences left on the form page.</p>
+</div>
+</details>
+<details class="session" id="aom-s2" data-search="2 css: forms + polish sat 26 dec 2026 website 1  css: forms + polish figma &amp; website development" data-date="2026-12-26">
+<summary><span class="s-num">Session 2</span><span class="s-title">CSS: Forms + polish</span><span class="s-date">Sat 26 Dec 2026</span></summary>
+<div class="s-meta">Sat 26 Dec 2026 | Website 1</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Style the form and polish spacing across the whole site. <strong>Materials:</strong> VS Code, Figma. <strong>Components / codes:</strong></p>
+<pre><code>form { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+input, textarea { padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; }
+input:focus { outline: 2px solid var(--primary); }</code></pre>
+<p><strong>Step-by-step:</strong> Style labels, inputs, textarea, submit button. Add <code>:focus</code> style. Polish pass: 48px between sections, all pages match Figma. Screenshot every page vs Figma. <strong>Test:</strong> Form easy to use, focus visible, site looks like Figma on desktop. <strong>Success check:</strong> A stranger could tell the website came from her Figma. <strong>Homework:</strong> List 3 things she wants the site to DO for JavaScript.</p>
+</div>
+</details>
+<details class="session" id="aom-s3" data-search="3 js: mobile menu sat 2 jan 2027 website 1  js: mobile menu figma &amp; website development" data-date="2027-01-02">
+<summary><span class="s-num">Session 3</span><span class="s-title">JS: Mobile menu</span><span class="s-date">Sat 2 Jan 2027</span></summary>
+<div class="s-meta">Sat 2 Jan 2027 | Website 1</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Add JavaScript that opens / closes the mobile menu. <strong>Materials:</strong> VS Code, Chrome DevTools. <strong>Components / codes:</strong></p>
+<pre><code>&lt;button id=&quot;menu-btn&quot;&gt;☰ Menu&lt;/button&gt;</code></pre>
+<pre><code>const menuBtn = document.getElementById(&#x27;menu-btn&#x27;);
+const navList = document.querySelector(&#x27;nav ul&#x27;);
+menuBtn.addEventListener(&#x27;click&#x27;, () =&gt; navList.classList.toggle(&#x27;open&#x27;));</code></pre>
+<p><strong>Step-by-step:</strong> Add menu button. Type JS in <code>script.js</code>. Add CSS for <code>.open</code>. Test desktop + DevTools mobile. Check Console — fix spelling / id first. <strong>Test:</strong> Button opens/closes menu, no Console errors, works on mobile width. <strong>Success check:</strong> Aom can explain <code>getElementById</code>, <code>addEventListener</code>, <code>classList.toggle</code>. <strong>Homework:</strong> Write in one sentence what the next interaction should do.</p>
+</div>
+</details>
+<details class="session" id="aom-s4" data-search="4 js: form validation + message sat 9 jan 2027 website 1  js: form validation + message figma &amp; website development" data-date="2027-01-09">
+<summary><span class="s-num">Session 4</span><span class="s-title">JS: Form validation + message</span><span class="s-date">Sat 9 Jan 2027</span></summary>
+<div class="s-meta">Sat 9 Jan 2027 | Website 1</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Validate the contact form in JS and show a success message without reloading. <strong>Materials:</strong> VS Code, her contact form. <strong>Components / codes:</strong></p>
+<pre><code>const form = document.querySelector(&#x27;form&#x27;);
+form.addEventListener(&#x27;submit&#x27;, (e) =&gt; {
+  e.preventDefault();
+  const name = document.getElementById(&#x27;name&#x27;).value.trim();
+  const email = document.getElementById(&#x27;email&#x27;).value.trim();
+  if (name === &#x27;&#x27; || email === &#x27;&#x27;) { alert(&#x27;Please fill in name and email.&#x27;); return; }
+  if (!email.includes(&#x27;@&#x27;)) { alert(&#x27;Please enter a valid email.&#x27;); return; }
+  alert(&#x27;Thank you, &#x27; + name + &#x27;! Your message was sent.&#x27;);
+  form.reset();
+});</code></pre>
+<p><strong>Step-by-step:</strong> Add submit listener, explain <code>preventDefault()</code>. Check name not empty, email has <code>@</code>. Success: thank-you with name, then reset. Test empty, bad email, good submit. <strong>Test:</strong> Empty blocked, bad email blocked, good shows thank-you + clears. <strong>Success check:</strong> Aom can test all three cases and explain each. <strong>Homework:</strong> Choose next feature: gallery filter OR image lightbox.</p>
+</div>
+</details>
+<details class="session" id="aom-s5" data-search="5 js: gallery interaction sat 16 jan 2027 website 1  js: gallery interaction figma &amp; website development" data-date="2027-01-16">
+<summary><span class="s-num">Session 5</span><span class="s-title">JS: Gallery interaction</span><span class="s-date">Sat 16 Jan 2027</span></summary>
+<div class="s-meta">Sat 16 Jan 2027 | Website 1</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Add one interactive feature to cards / gallery — filter or lightbox, her choice. <strong>Materials:</strong> VS Code, her cards. <strong>Components / codes — filter version:</strong></p>
+<pre><code>document.querySelectorAll(&#x27;[data-filter]&#x27;).forEach(btn =&gt; {
+  btn.addEventListener(&#x27;click&#x27;, () =&gt; {
+    const filter = btn.dataset.filter;
+    document.querySelectorAll(&#x27;.card&#x27;).forEach(card =&gt; {
+      card.style.display = (filter === &#x27;all&#x27; || card.dataset.type === filter) ? &#x27;block&#x27; : &#x27;none&#x27;;
+    });
+  });
+});</code></pre>
+<p><strong>Step-by-step:</strong> Add <code>data-type</code> to each card + filter buttons above grid. Type JS. Or build lightbox instead if she chose it — click image → show large + close button. Do not build both in one session. Test every button. <strong>Test:</strong> Every filter shows the right cards, no card disappears forever, no Console errors. <strong>Success check:</strong> Aom can demo the feature without help. <strong>Homework:</strong> List 3 small improvements — pick one for next week.</p>
+</div>
+</details>
+<details class="session" id="aom-s6" data-search="6 js: polish + test list sat 23 jan 2027 website 1  js: polish + test list figma &amp; website development" data-date="2027-01-23">
+<summary><span class="s-num">Session 6</span><span class="s-title">JS: Polish + test list</span><span class="s-date">Sat 23 Jan 2027</span></summary>
+<div class="s-meta">Sat 23 Jan 2027 | Website 1</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Add one small polish feature and fix all JS bugs. <strong>Materials:</strong> VS Code, homework list. <strong>Components / codes — pick ONE:</strong></p>
+<pre><code>const topBtn = document.getElementById(&#x27;top-btn&#x27;);
+topBtn.addEventListener(&#x27;click&#x27;, () =&gt; window.scrollTo({ top: 0, behavior: &#x27;smooth&#x27; }));
+// OR
+document.getElementById(&#x27;year&#x27;).textContent = new Date().getFullYear();</code></pre>
+<p><strong>Step-by-step:</strong> Pick one homework improvement, build + test it. Full JS check: every page, Console, fix every red error. Check form, menu, gallery still work. Write a 5-point test list for every page. <strong>Test:</strong> All JS features work, no Console errors on any page, site still looks like Figma. <strong>Success check:</strong> Aom can run her own 5-point test list. <strong>Homework:</strong> Bring a phone to test the real site on next week.</p>
+</div>
+</details>
+<details class="session" id="aom-s7" data-search="7 responsive: mobile layout sat 30 jan 2027 website 1  responsive: mobile layout figma &amp; website development" data-date="2027-01-30">
+<summary><span class="s-num">Session 7</span><span class="s-title">Responsive: Mobile layout</span><span class="s-date">Sat 30 Jan 2027</span></summary>
+<div class="s-meta">Sat 30 Jan 2027 | Website 1</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Make the site work on a phone with media queries. <strong>Materials:</strong> VS Code, phone, DevTools. <strong>Components / codes:</strong></p>
+<pre><code>@media (max-width: 768px) {
+  h1 { font-size: 32px; }
+  .cards { grid-template-columns: 1fr; }
+  nav ul { display: none; flex-direction: column; }
+  nav ul.open { display: flex; }
+  .hero { padding: 48px 16px; }
+}</code></pre>
+<p><strong>Step-by-step:</strong> Open at 375px, list broken things. Add media query. Fix h1, cards to 1 column, nav hidden-until-menu. Test menu on a real phone. Test at 768px too. <strong>Test:</strong> No horizontal scrolling, text readable, menu works, cards stack, form fits. <strong>Success check:</strong> Aom can show the site on her phone and it looks right. <strong>Homework:</strong> Ask one person at home to try the site, tell her 1 confusing thing.</p>
+</div>
+</details>
+<details class="session" id="aom-s8" data-search="8 test + accessibility sat 6 feb 2027 website 1  test + accessibility figma &amp; website development" data-date="2027-02-06">
+<summary><span class="s-num">Session 8</span><span class="s-title">Test + accessibility</span><span class="s-date">Sat 6 Feb 2027</span></summary>
+<div class="s-meta">Sat 6 Feb 2027 | Website 1</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Test the whole site and fix accessibility basics. <strong>Materials:</strong> VS Code, phone, checklist. <strong>Step-by-step:</strong> Run 5-point test list on every page, desktop + mobile. Accessibility: every image has alt text, every form input has a label, contrast readable, headings in order (h1 once, then h2, h3). Fix broken links, missing images, typos — copy text exactly from Figma. Fix the 1 confusing thing from home feedback. <strong>Test:</strong> No broken links, no missing images, no Console errors, alt text everywhere, headings in order. <strong>Success check:</strong> Aom can pass her own test list with zero fails. <strong>Homework:</strong> Write a 2-sentence description of Website 1 for the showcase.</p>
+</div>
+</details>
+<details class="session" id="aom-s9" data-search="9 publish website 1 sat 13 feb 2027 website 1  publish website 1 figma &amp; website development" data-date="2027-02-13">
+<summary><span class="s-num">Session 9</span><span class="s-title">Publish Website 1</span><span class="s-date">Sat 13 Feb 2027</span></summary>
+<div class="s-meta">Sat 13 Feb 2027 | Website 1</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Publish Website 1 live so anyone can open it with a link. <strong>Materials:</strong> VS Code, GitHub / Netlify (Rica to confirm). <strong>Step-by-step:</strong> Tidy folder: <code>index.html</code> at top, <code>style.css</code>, <code>script.js</code>, <code>images/</code> with only used images. Publish — GitHub Pages: create repo, upload files, Settings → Pages → Deploy from branch, copy live link. OR Netlify Drop if Rica chooses it — drag folder in, copy link. Open live link on phone + computer, test nav / form / menu / gallery. Fix live-only bugs (usually image path capital letters). Save live link — do not share publicly until Rica / parent says yes. <strong>Test:</strong> Live link loads, all pages work live, images load live, no Console errors live. <strong>Success check:</strong> Aom can open her own live website on her phone. <strong>Homework:</strong> Practise a 2-minute showcase talk.</p>
+</div>
+</details>
+<details class="session" id="aom-s10" data-search="10 showcase website 1 + choose website 2 sat 20 feb 2027 website 1  showcase website 1 + choose website 2 figma &amp; website development" data-date="2027-02-20">
+<summary><span class="s-num">Session 10</span><span class="s-title">Showcase Website 1 + choose Website 2</span><span class="s-date">Sat 20 Feb 2027</span></summary>
+<div class="s-meta">Sat 20 Feb 2027 | Website 1</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Present Website 1 and choose the topic for Website 2. <strong>Materials:</strong> Live link, Figma file, VS Code. <strong>Step-by-step:</strong> Aom presents: Figma first, then live website, then one JS feature live. Review: what matches Figma, what is better, what to change next. Choose Website 2 topic together — her choice, not invented. Write down its 4 pages + main heading. Save everything + parent report update. <strong>Test:</strong> Showcase runs end-to-end, live link works. <strong>Success check:</strong> Aom can explain Figma → HTML → CSS → JavaScript in her own words. <strong>Homework:</strong> Sketch Website 2 homepage on paper — header, hero, 3 cards, footer.</p>
+</div>
+</details>
+<details class="session" id="aom-s11" data-search="11 website 2: figma design sat 27 feb 2027 website 2  website 2: figma design figma &amp; website development" data-date="2027-02-27">
+<summary><span class="s-num">Session 11</span><span class="s-title">Website 2: Figma design</span><span class="s-date">Sat 27 Feb 2027</span></summary>
+<div class="s-meta">Sat 27 Feb 2027 | Website 2</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Design Website 2 in Figma, reusing what she learned. <strong>Materials:</strong> Figma, Website 2 sketch. <strong>Components:</strong> New Figma file, Desktop 1440px + Mobile 375px frames, Button / Card components (copy from Website 1, change colours if she wants). <strong>Step-by-step:</strong> Build homepage frame first: header, hero, 3 cards, footer. Apply Text + Colour Styles — reuse Website 1 or make new ones, her choice. Build other 3 pages. Check alignment / spacing / hierarchy with the same checklist as Left 1. <strong>Test:</strong> Same Figma checklist — no overlaps, even gaps, one clear H1 per page. <strong>Success check:</strong> Website 2 Figma is ready to code, no redesign needed mid-build. <strong>Homework:</strong> Write exact headings + button text for Website 2.</p>
+</div>
+</details>
+<details class="session" id="aom-s12" data-search="12 website 2: html structure sat 6 mar 2027 website 2  website 2: html structure figma &amp; website development" data-date="2027-03-06">
+<summary><span class="s-num">Session 12</span><span class="s-title">Website 2: HTML structure</span><span class="s-date">Sat 6 Mar 2027</span></summary>
+<div class="s-meta">Sat 6 Mar 2027 | Website 2</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Build Website 2 HTML structure in VS Code. <strong>Materials:</strong> VS Code + Live Server, Figma Website 2. <strong>Components:</strong> New folder <code>aom-website-2/</code> with <code>index.html</code>, <code>style.css</code>, <code>script.js</code>, <code>images/</code>. Same skeleton as Left 2. <strong>Step-by-step:</strong> Create new project folder. Type skeleton, add header/nav/hero/sections/cards/footer/form — all pages, plain HTML first. Copy exact text from Figma Website 2. Test all links. <strong>Test:</strong> All pages load, structure matches Figma Website 2 order, no unclosed tags. <strong>Success check:</strong> Website 2 works as plain HTML, complete and linked. <strong>Homework:</strong> List the CSS colours / fonts for Website 2.</p>
+</div>
+</details>
+<details class="session" id="aom-s13" data-search="13 website 2: css to match figma sat 13 mar 2027 website 2  website 2: css to match figma figma &amp; website development" data-date="2027-03-13">
+<summary><span class="s-num">Session 13</span><span class="s-title">Website 2: CSS to match Figma</span><span class="s-date">Sat 13 Mar 2027</span></summary>
+<div class="s-meta">Sat 13 Mar 2027 | Website 2</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Style Website 2 with CSS to match its Figma. <strong>Materials:</strong> VS Code, Figma Website 2. <strong>Components:</strong> <code>:root</code> variables with Website 2 hex codes, Flexbox header/nav, Grid cards, <code>.btn</code> styles. <strong>Step-by-step:</strong> Add variables, body / headings, header / hero / buttons, cards Grid, footer, form. Compare side-by-side with Figma, fix 3 differences. Reuse Website 1 CSS where it fits — copy, do not retype everything. <strong>Test:</strong> Website 2 looks like its Figma on desktop. <strong>Success check:</strong> Aom can explain what she reused vs what is new. <strong>Homework:</strong> List 2 interactive features Website 2 should have.</p>
+</div>
+</details>
+<details class="session" id="aom-s14" data-search="14 website 2: responsive sat 20 mar 2027 website 2  website 2: responsive figma &amp; website development" data-date="2027-03-20">
+<summary><span class="s-num">Session 14</span><span class="s-title">Website 2: Responsive</span><span class="s-date">Sat 20 Mar 2027</span></summary>
+<div class="s-meta">Sat 20 Mar 2027 | Website 2</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Make Website 2 responsive on phone + tablet. <strong>Materials:</strong> VS Code, phone, DevTools. <strong>Components:</strong> Same media query pattern as Future 7: <code>@media (max-width: 768px)</code> — h1 32px, cards 1 column, nav hidden-until-menu. <strong>Step-by-step:</strong> Test at 375px + 768px, list broken things, add media query, test menu on a real phone. <strong>Test:</strong> No horizontal scrolling, menu works, cards stack, form fits. <strong>Success check:</strong> Website 2 looks right on phone and computer. <strong>Homework:</strong> Choose Website 2&#x27;s main JS feature.</p>
+</div>
+</details>
+<details class="session" id="aom-s15" data-search="15 website 2: javascript 1 sat 27 mar 2027 website 2  website 2: javascript 1 figma &amp; website development" data-date="2027-03-27">
+<summary><span class="s-num">Session 15</span><span class="s-title">Website 2: JavaScript 1</span><span class="s-date">Sat 27 Mar 2027</span></summary>
+<div class="s-meta">Sat 27 Mar 2027 | Website 2</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Add the first JavaScript feature to Website 2 (menu + one more). <strong>Materials:</strong> VS Code, Website 2 homework choice. <strong>Components:</strong> Reuse menu code from Future 3, plus one new feature — filter, lightbox, or form validation (codes in Future 4 / 5). <strong>Step-by-step:</strong> Add menu JS first (copy + adapt ids). Add the chosen feature. Test on desktop + mobile. Check Console. <strong>Test:</strong> Menu + new feature both work, no Console errors. <strong>Success check:</strong> Aom can demo both features without help. <strong>Homework:</strong> List what Website 2 still needs before publishing.</p>
+</div>
+</details>
+<details class="session" id="aom-s16" data-search="16 website 2: javascript 2 — data + lists sat 3 apr 2027 website 2  website 2: javascript 2 — data + lists figma &amp; website development" data-date="2027-04-03">
+<summary><span class="s-num">Session 16</span><span class="s-title">Website 2: JavaScript 2 — data + lists</span><span class="s-date">Sat 3 Apr 2027</span></summary>
+<div class="s-meta">Sat 3 Apr 2027 | Website 2</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Add a data / list feature to Website 2. <strong>Materials:</strong> VS Code, Website 2. <strong>Components / codes:</strong></p>
+<pre><code>const items = [&#x27;Item 1&#x27;, &#x27;Item 2&#x27;, &#x27;Item 3&#x27;];
+const list = document.getElementById(&#x27;my-list&#x27;);
+items.forEach(item =&gt; {
+  const li = document.createElement(&#x27;li&#x27;);
+  li.textContent = item;
+  list.appendChild(li);
+});</code></pre>
+<p><strong>Step-by-step:</strong> Add an empty <code>&lt;ul id=&quot;my-list&quot;&gt;&lt;/ul&gt;</code> in HTML. Type the JS above with HER real items (not the examples). Test: list appears, no errors. Add a form input to add a new item if time — keep it small. <strong>Test:</strong> List shows all items, new item (if added) appears, no Console errors. <strong>Success check:</strong> Aom can explain array → <code>forEach</code> → <code>createElement</code> in plain words. <strong>Homework:</strong> Write the test list for Website 2 (5 points, like Future 6).</p>
+</div>
+</details>
+<details class="session" id="aom-s17" data-search="17 website 2: forms + validation sat 10 apr 2027 website 2  website 2: forms + validation figma &amp; website development" data-date="2027-04-10">
+<summary><span class="s-num">Session 17</span><span class="s-title">Website 2: Forms + validation</span><span class="s-date">Sat 10 Apr 2027</span></summary>
+<div class="s-meta">Sat 10 Apr 2027 | Website 2</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Add + validate a form on Website 2. <strong>Materials:</strong> VS Code, Website 2 form. <strong>Components:</strong> Reuse Future 4 validation pattern — <code>preventDefault()</code>, check name not empty, email has <code>@</code>, thank-you + <code>form.reset()</code>, adapted to Website 2 field ids. <strong>Step-by-step:</strong> Build / check the form HTML, add validation JS, test empty / bad email / good submit. <strong>Test:</strong> Empty blocked, bad email blocked, good shows thank-you + clears. <strong>Success check:</strong> Aom can test all three cases herself. <strong>Homework:</strong> Bring a phone + ask one person to try Website 2.</p>
+</div>
+</details>
+<details class="session" id="aom-s18" data-search="18 website 2: test + polish sat 17 apr 2027 website 2  website 2: test + polish figma &amp; website development" data-date="2027-04-17">
+<summary><span class="s-num">Session 18</span><span class="s-title">Website 2: Test + polish</span><span class="s-date">Sat 17 Apr 2027</span></summary>
+<div class="s-meta">Sat 17 Apr 2027 | Website 2</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Test Website 2 fully and polish it. <strong>Materials:</strong> VS Code, phone, test list from Future 16. <strong>Step-by-step:</strong> Run 5-point test list on every page, desktop + mobile. Accessibility: alt text, labels, contrast, heading order. Fix broken links / typos / home feedback. Polish spacing + colours to match Figma Website 2. <strong>Test:</strong> Zero fails on her test list, no Console errors, no broken links/images. <strong>Success check:</strong> Website 2 is ready to publish. <strong>Homework:</strong> Write a 2-sentence description of Website 2.</p>
+</div>
+</details>
+<details class="session" id="aom-s19" data-search="19 publish website 2 sat 24 apr 2027 website 2  publish website 2 figma &amp; website development" data-date="2027-04-24">
+<summary><span class="s-num">Session 19</span><span class="s-title">Publish Website 2</span><span class="s-date">Sat 24 Apr 2027</span></summary>
+<div class="s-meta">Sat 24 Apr 2027 | Website 2</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Publish Website 2 live. <strong>Materials:</strong> VS Code, GitHub / Netlify. <strong>Step-by-step:</strong> Tidy folder, publish (same method as Future 9), copy live link. Open live on phone + computer, test nav / form / JS. Fix live-only bugs. Save link — do not share publicly until Rica / parent says yes. <strong>Test:</strong> Live link loads, all pages + features work live. <strong>Success check:</strong> Aom has 2 live websites. <strong>Homework:</strong> Practise a 2-minute talk for each website.</p>
+</div>
+</details>
+<details class="session" id="aom-s20" data-search="20 portfolio: combine both websites sat 1 may 2027 portfolio  portfolio: combine both websites figma &amp; website development" data-date="2027-05-01">
+<summary><span class="s-num">Session 20</span><span class="s-title">Portfolio: Combine both websites</span><span class="s-date">Sat 1 May 2027</span></summary>
+<div class="s-meta">Sat 1 May 2027 | Portfolio</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Build a simple portfolio homepage linking both live websites. <strong>Materials:</strong> VS Code, both live links, Figma (one-page sketch). <strong>Components / codes:</strong></p>
+<pre><code>&lt;section class=&quot;cards&quot;&gt;
+  &lt;article class=&quot;card&quot;&gt;
+    &lt;h3&gt;Website 1&lt;/h3&gt;&lt;p&gt;2-sentence description from Future 8.&lt;/p&gt;
+    &lt;a href=&quot;https://website-1-live-link&quot; class=&quot;btn&quot;&gt;View live&lt;/a&gt;
+  &lt;/article&gt;
+  &lt;article class=&quot;card&quot;&gt;
+    &lt;h3&gt;Website 2&lt;/h3&gt;&lt;p&gt;2-sentence description from Future 18.&lt;/p&gt;
+    &lt;a href=&quot;https://website-2-live-link&quot; class=&quot;btn&quot;&gt;View live&lt;/a&gt;
+  &lt;/article&gt;
+&lt;/section&gt;</code></pre>
+<p><strong>Step-by-step:</strong> Create <code>aom-portfolio/</code> with <code>index.html</code>, <code>style.css</code>. Add her name, a short About paragraph (her words only), 2 cards linking to the live sites, contact link. Style to match her Figma style. Test links. <strong>Test:</strong> Both live links work from the portfolio, portfolio looks tidy on phone + computer. <strong>Success check:</strong> Aom can show one portfolio link that leads to both websites. <strong>Homework:</strong> Practise the final showcase talk.</p>
+</div>
+</details>
+<details class="session" id="aom-s21" data-search="21 portfolio: polish + responsive sat 8 may 2027 portfolio  portfolio: polish + responsive figma &amp; website development" data-date="2027-05-08">
+<summary><span class="s-num">Session 21</span><span class="s-title">Portfolio: Polish + responsive</span><span class="s-date">Sat 8 May 2027</span></summary>
+<div class="s-meta">Sat 8 May 2027 | Portfolio</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Polish the portfolio and make it responsive. <strong>Materials:</strong> VS Code, phone, DevTools. <strong>Step-by-step:</strong> Add the same media query pattern: 1-column cards on phone, smaller H1. Add a simple JS feature — e.g. back-to-top button or year in footer (code in Future 6). Test portfolio on phone + computer. Fix spacing / colours. <strong>Test:</strong> Portfolio looks right on phone, both links work, no Console errors. <strong>Success check:</strong> Portfolio is ready to show parents. <strong>Homework:</strong> Choose the blog topic for Future 22 — her choice, e.g. her coding journey.</p>
+</div>
+</details>
+<details class="session" id="aom-s22" data-search="22 extra project: blog page for website 1 sat 15 may 2027 blog  extra project: blog page for website 1 figma &amp; website development" data-date="2027-05-15">
+<summary><span class="s-num">Session 22</span><span class="s-title">Extra project: Blog page for Website 1</span><span class="s-date">Sat 15 May 2027</span></summary>
+<div class="s-meta">Sat 15 May 2027 | Blog</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Add a blog page to Website 1 (HTML + CSS). <strong>Materials:</strong> VS Code, Figma sketch, Website 1 project. <strong>Step-by-step:</strong> Sketch the blog page on paper: header (same as site), list of 3 blog posts (title + date + short paragraph — her words only), footer (same as site). Build <code>blog.html</code> with the same header/nav/footer, add 3 <code>article</code> posts. Style with the same CSS — reuse, do not start a new stylesheet. Link Blog in the nav on every page. <strong>Test:</strong> Blog page loads, nav works from every page, posts look like the rest of the site. <strong>Success check:</strong> Website 1 now has a new page that matches the rest. <strong>Homework:</strong> Write the 3 blog post titles + first sentences for next week.</p>
+</div>
+</details>
+<details class="session" id="aom-s23" data-search="23 extra project: blog js — filter / search sat 22 may 2027 blog  extra project: blog js — filter / search figma &amp; website development" data-date="2027-05-22">
+<summary><span class="s-num">Session 23</span><span class="s-title">Extra project: Blog JS — filter / search</span><span class="s-date">Sat 22 May 2027</span></summary>
+<div class="s-meta">Sat 22 May 2027 | Blog</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Add JavaScript search / filter to the blog page. <strong>Materials:</strong> VS Code, blog page from Future 22. <strong>Components / codes:</strong></p>
+<pre><code>&lt;input type=&quot;text&quot; id=&quot;search&quot; placeholder=&quot;Search posts...&quot;&gt;</code></pre>
+<pre><code>const search = document.getElementById(&#x27;search&#x27;);
+search.addEventListener(&#x27;input&#x27;, () =&gt; {
+  const q = search.value.toLowerCase();
+  document.querySelectorAll(&#x27;.post&#x27;).forEach(post =&gt; {
+    post.style.display = post.textContent.toLowerCase().includes(q) ? &#x27;block&#x27; : &#x27;none&#x27;;
+  });
+});</code></pre>
+<p><strong>Step-by-step:</strong> Add search input above the posts. Add class <code>post</code> to each <code>article</code>. Type the JS above. Test: search for a word in a title, check only matching posts show. Test empty search shows all. <strong>Test:</strong> Search works, empty search shows all, no Console errors. <strong>Success check:</strong> Aom can demo search without help. <strong>Homework:</strong> List final polish items for all 3 sites (Website 1, Website 2, Portfolio).</p>
+</div>
+</details>
+<details class="session" id="aom-s24" data-search="24 final polish all sites sat 29 may 2027 final showcase  final polish all sites figma &amp; website development" data-date="2027-05-29">
+<summary><span class="s-num">Session 24</span><span class="s-title">Final polish all sites</span><span class="s-date">Sat 29 May 2027</span></summary>
+<div class="s-meta">Sat 29 May 2027 | Final showcase</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Polish Website 1, Website 2, Portfolio + Blog together. <strong>Materials:</strong> VS Code, phone, all live links. <strong>Step-by-step:</strong> Run the 5-point test list on every site, desktop + mobile. Fix broken links, typos, spacing, Console errors. Re-publish any site that changed. Check all live links again. <strong>Test:</strong> Zero fails across all sites, all live links work. <strong>Success check:</strong> Everything is ready for the final showcase. <strong>Homework:</strong> Practise the final showcase talk — portfolio → Website 1 → Website 2 → Blog.</p>
+</div>
+</details>
+<details class="session" id="aom-s25" data-search="25 final showcase + next steps sat 5 jun 2027 final showcase  final showcase + next steps figma &amp; website development" data-date="2027-06-05">
+<summary><span class="s-num">Session 25</span><span class="s-title">Final showcase + next steps</span><span class="s-date">Sat 5 Jun 2027</span></summary>
+<div class="s-meta">Sat 5 Jun 2027 | Final showcase</div>
+<div class="s-body">
+<p><strong>Objective:</strong> Present both websites + portfolio + blog, and decide what is next. <strong>Materials:</strong> Portfolio link, both live links, Figma files, VS Code. <strong>Step-by-step:</strong> Aom presents: portfolio → Website 1 (+ Blog search live) → Website 2, one JS feature live on each. Review: what matches Figma, what is better, what she would change. Final polish: fix last 1–2 small things, re-publish if needed. Decide next steps together: deeper JavaScript, a third website / shop, or a new track — write it down, do not start it today. Save everything: Figma files, project folders, live links. Write CIY report + parent report update. <strong>Test:</strong> Showcase runs end-to-end, all links work. <strong>Success check:</strong> Aom can explain Figma → HTML → CSS → JavaScript → publish, in her own words. <strong>Homework:</strong> None — celebrate 2 live websites + a portfolio + a blog.</p>
+<h3>Progress checks</h3>
 <ul>
-<li>Apprentice → Enthusiast: Capstone 1.6 works — all 3 games play, best scores save.</li>
-<li>Enthusiast → Professional: Capstone 2.6 works — all 5 games play, best scores save.</li>
-<li>Professional → Master: Capstone 3.6 works — all 3 levels finishable, best time saves.</li>
-<li>Master → Boss: Capstone 4.6 works — map → battle → puzzle → shop → boss, save survives closing.</li>
-<li>Boss → GOAT: Capstone 5.6 works — full multiplayer match with a real opponent, leaderboard works.</li>
-<li>GOAT complete: Capstone 6.6 works — game published (or shared with approval) + portfolio presented.</li>
-<li>Do not move up on a half-finished capstone. Fix the top bug first, then move up.</li>
+<li>After Left 3: parent report update (due now) + show the finished, styled homepage.</li>
+<li>After Future 9: Website 1 live — parent update.</li>
+<li>After Future 25: both websites + portfolio + blog live — parent report + next-steps decision.</li>
+<li>Report after each session in the CIY system, as usual.</li>
+<li>If renewal does not happen, stop after Left 3 — do not start Future 1 without confirmed sessions.</li>
+<li>Superseded file: <code>aom-2-sessions-left-plus-25-future-2026-11-18.md</code> — do not use it, it said 2 left by mistake.</li>
 </ul>
-<p class="small">Do not move up on a half-finished capstone. Fix the top bug first, then move up. Every capstone ends with a parent update and a live showcase — the game is demoed, not just screenshotted.</p>
+</div>
+</details>
+</section>
 <p><a class="btn" href="index.html">Back to Coder Lesson Plan &rarr;</a></p>
 </main>
 </body>
