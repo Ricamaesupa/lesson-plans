@@ -4,6 +4,7 @@ Ready-to-teach lesson plans by Coach Rica Mae Supa, CIY Club.
 
 - **Gin** — MIT App Inventor, 127 sessions, Wednesdays 3:30–5:00pm, 18 Nov 2026 – 18 Apr 2029 (`gin.html`)
 - **Yim** — Minecraft Education, MIT App Inventor & Micro:bit, 265 sessions, Tue / Sat / Sun, 17 Nov 2026 – 21 Nov 2027 (`yim.html`)
+- **Aom** — Figma & Website Development, 25 future sessions, Saturdays 9:00–10:30am, 19 Dec 2026 – 5 Jun 2027 (`aom.html`)
 - **Curriculum** — phase / unit overview for both students (`curriculum.html`)
 - **End Session Report** — latest submitted CIY session reports (`end-session-report.html`)
 
