@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard | Lesson Plans LMS</title>
+<meta name="description" content="Teacher dashboard for the CIY Club lesson-plan LMS.">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="lms.css">
+</head>
+<body data-nav="dashboard">
+<main class="wrap">
+<p class="kicker">CIY Club &middot; Coach Rica Mae Supa</p>
+<h1>Dashboard</h1>
+<p class="lede">Teacher home — students, curricula, and what comes next.</p>
+
+<p id="error" class="error" hidden></p>
+
+<section class="stat-grid" id="stats" aria-label="Totals">
+  <div class="stat-card"><div class="stat-num" id="statStudents">&ndash;</div><div class="stat-label">Students</div></div>
+  <div class="stat-card"><div class="stat-num" id="statCurricula">&ndash;</div><div class="stat-label">Curricula</div></div>
+  <div class="stat-card"><div class="stat-num" id="statAssignments">&ndash;</div><div class="stat-label">Curriculum assignments</div></div>
+  <div class="stat-card"><div class="stat-num" id="statAssessments">&ndash;</div><div class="stat-label">Skill assessments</div></div>
+  <div class="stat-card"><div class="stat-num" id="statLessonPlans">&ndash;</div><div class="stat-label">Lesson plans</div></div>
+  <div class="stat-card"><div class="stat-num" id="statSessions">&ndash;</div><div class="stat-label">Sessions conducted</div></div>
+  <div class="stat-card"><div class="stat-num" id="statReports">&ndash;</div><div class="stat-label">End-session reports</div></div>
+  <div class="stat-card"><div class="stat-num" id="statPortfolio">&ndash;</div><div class="stat-label">Portfolio entries</div></div>
+</section>
+
+<section class="cards">
+  <article class="card">
+    <h2><a href="students.html">Achievements &amp; Portfolio</a></h2>
+    <p class="card-sub">Student achievements and portfolios</p>
+    <p>Evaluate completed students, build achievement reports and portfolios. Open a student to see their portfolio.</p>
+    <p><a class="btn" href="students.html">Open Student Management &rarr;</a></p>
+  </article>
+  <article class="card">
+    <h2><a href="curriculum.html">Curriculum Management</a></h2>
+    <p class="card-sub">Curriculum library</p>
+    <p>Create curricula, modules and detailed lessons, saved to the Curriculum Library.</p>
+    <p><a class="btn" href="curriculum.html">Open Curriculum Management &rarr;</a></p>
+  </article>
+  <article class="card">
+    <h2><a href="students.html">Student Management</a></h2>
+    <p class="card-sub">Students, profiles and assignments</p>
+    <p>Register students, create student profiles, assign curricula and assess initial skill level.</p>
+    <p><a class="btn" href="students.html">Open Student Management &rarr;</a></p>
+  </article>
+  <article class="card">
+    <h2><a href="reports.html">End-Session Reports</a></h2>
+    <p class="card-sub">Session reports and progress</p>
+    <p>Record performance after each session and create end-session reports.</p>
+    <p><a class="btn" href="reports.html">Open End-Session Reports &rarr;</a></p>
+  </article>
+</section>
+
+<footer class="foot">Lesson Plans LMS &middot; Phases 1–3: teacher login, dashboard, student management, curriculum management, lesson planning, sessions, reports, portfolio.</footer>
+</main>
+<script src="app.js"></script>
+<script>
+(function () {
+  'use strict';
+  var errorEl = document.getElementById('error');
+
+  async function load() {
+    if (!(await LMS.requireAuth())) return;
+    try {
+      var d = await LMS.api('/api/dashboard');
+      document.getElementById('statStudents').textContent = d.students;
+      document.getElementById('statCurricula').textContent = d.curricula;
+      document.getElementById('statAssignments').textContent = d.assignments;
+      document.getElementById('statAssessments').textContent = d.assessments;
+      document.getElementById('statLessonPlans').textContent = d.lesson_plans;
+      document.getElementById('statSessions').textContent = d.sessions_conducted;
+      document.getElementById('statReports').textContent = d.reports;
+      document.getElementById('statPortfolio').textContent = d.portfolio_entries;
+    } catch (err) {
+      errorEl.textContent = 'Could not load dashboard totals: ' + err.message;
+      errorEl.hidden = false;
+    }
+  }
+
+  load();
+})();
+</script>
+</body>
+</html>

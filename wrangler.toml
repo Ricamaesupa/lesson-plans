@@ -1,0 +1,6 @@
+name = "rica-lesson-plans"
+pages_build_output_dir = "."
+[[d1_databases]]
+binding = "DB"
+database_name = "rica-lesson-plans-lms"
+database_id = "58ae993d-dc5f-46f6-a0b9-2e186a6b5f90"

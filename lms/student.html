@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teaching Flow | Lesson Plans LMS</title>
+<meta name="description" content="Teacher per-student lesson and session flow for the CIY Club lesson-plan LMS.">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="lms.css">
+</head>
+<body data-nav="students">
+<main class="wrap">
+<p class="kicker">Teaching Flow &middot; Individual Student Lesson &amp; Session</p>
+<h1 id="pageTitle">Teaching flow</h1>
+<p class="lede">Follow one student through the lesson &amp; session flow: profile, previous report, progress, next lesson, teach, observe, report — and the cycle check.</p>
+<p><a href="students.html">&larr; Back to all students</a></p>
+
+<p id="error" class="error" hidden></p>
+<p id="success" class="success" hidden></p>
+
+<!-- 1. Profile + previous report + progress -->
+<section id="profileSection" class="detail-block">
+  <p class="muted">Loading student…</p>
+</section>
+
+<!-- 2. Select next lesson + customise the plan -->
+<section id="nextLessonSection" class="detail-block">
+  <h2>Select Next Lesson</h2>
+  <p class="muted">Choose an assigned curriculum, pick a lesson from the library (or build a custom plan), then customise it for this student.</p>
+  <form id="planForm" class="form-card">
+    <div class="form-row">
+      <div class="field">
+        <label for="planCurriculum">Curriculum *</label>
+        <select id="planCurriculum" required></select>
+      </div>
+      <div class="field">
+        <label for="planLesson">Library lesson</label>
+        <select id="planLesson"><option value="">— custom plan, no library lesson —</option></select>
+      </div>
+    </div>
+    <div class="field">
+      <label for="planTitle">Plan title *</label>
+      <input type="text" id="planTitle" required maxlength="200" placeholder="e.g. First App — Button &amp; Label">
+      <p class="hint">Filled in from the library lesson when you pick one — change it to customise.</p>
+    </div>
+    <div class="field">
+      <label for="planObjectives">Custom learning objectives</label>
+      <textarea id="planObjectives" maxlength="2000" placeholder="What this student should be able to do after this lesson."></textarea>
+    </div>
+    <div class="field">
+      <label for="planActivities">Custom activities</label>
+      <textarea id="planActivities" maxlength="2000" placeholder="Activities for this student, in their own words."></textarea>
+    </div>
+    <div class="field">
+      <label for="planAssessment">Assessment plan</label>
+      <textarea id="planAssessment" maxlength="2000" placeholder="How you will check the objectives were met."></textarea>
+    </div>
+    <div class="field">
+      <label for="planMaterials">Teaching materials</label>
+      <textarea id="planMaterials" maxlength="2000" placeholder="Materials to prepare — notes, links, files to have ready."></textarea>
+    </div>
+    <div class="field">
+      <label for="planSession">Attach to a planned session (optional)</label>
+      <select id="planSession"><option value="">— none, plan it after saving —</option></select>
+    </div>
+    <button type="submit" class="btn">Save lesson plan</button>
+  </form>
+</section>
+
+<!-- 3. Lesson plans -->
+<section id="plansSection" class="detail-block">
+  <h2>Lesson Plans</h2>
+  <div id="plansList"><p class="muted">Loading plans…</p></div>
+</section>
+
+<!-- 4. Sessions -->
+<section id="sessionsSection" class="detail-block">
+  <h2>Sessions</h2>
+  <p class="muted">Plan a session, conduct it, then observe, evaluate and record the end-session report — all from the session card.</p>
+  <div id="sessionsList"><p class="muted">Loading sessions…</p></div>
+</section>
+
+<!-- 5. Cycle check + final assessment + achievement report -->
+<section id="cycleSection" class="detail-block">
+  <h2>Cycle Check &amp; Completion</h2>
+  <div id="cycleList"><p class="muted">Loading cycle status…</p></div>
+</section>
+
+<footer class="foot">Lesson Plans LMS &middot; Teaching flow (Phases 2 + 3).</footer>
+</main>
+<script src="app.js"></script>
+<script>
+(function () {
+  'use strict';
+  var esc = LMS.esc;
+  var errorEl = document.getElementById('error');
+  var successEl = document.getElementById('success');
+  var studentId = new URLSearchParams(window.location.search).get('id');
+  var profile = null;       /* {student, progress, assessments, previous_reports} */
+  var plans = [];           /* lesson plans for this student */
+  var sessionDetails = [];  /* [{session, student, lesson_plan, observation, report, practice_items}] */
+  var curriculumDetail = null; /* {curriculum, modules} for the lesson picker */
+  var finalAssessments = {};   /* curriculum_id -> final assessment record */
+  var achievementReports = {}; /* curriculum_id -> latest generated report */
+
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.hidden = false;
+    successEl.hidden = true;
+  }
+  function showSuccess(msg) {
+    successEl.textContent = msg;
+    successEl.hidden = false;
+    errorEl.hidden = true;
+  }
+  function clearMessages() { errorEl.hidden = true; successEl.hidden = true; }
+  function fmtDate(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleDateString();
+  }
+  function val(id) {
+    var el = document.getElementById(id);
+    return el ? el.value.trim() : '';
+  }
+
+  /* ---------- LOAD ---------- */
+  async function loadAll() {
+    profile = await LMS.api('/api/students/' + encodeURIComponent(studentId) + '/profile');
+    plans = await LMS.api('/api/students/' + encodeURIComponent(studentId) + '/lesson-plans');
+    var sessions = await LMS.api('/api/students/' + encodeURIComponent(studentId) + '/sessions');
+    sessionDetails = await Promise.all(sessions.map(function (s) {
+      return LMS.api('/api/sessions/' + encodeURIComponent(s.id)).catch(function () { return null; });
+    }));
+    sessionDetails = sessionDetails.filter(function (d) { return d; });
+    /* Final assessments + latest achievement reports per assigned curriculum. */
+    var fas = await LMS.api('/api/students/' + encodeURIComponent(studentId) + '/final-assessments');
+    finalAssessments = {};
+    fas.forEach(function (fa) { finalAssessments[fa.curriculum_id] = fa; });
+    achievementReports = {};
+    for (var i = 0; i < (profile.progress || []).length; i++) {
+      var cid = profile.progress[i].curriculum_id;
+      if (finalAssessments[cid]) {
+        try {
+          var rep = await LMS.api('/api/final-assessments/' + encodeURIComponent(finalAssessments[cid].id) + '/achievement-report');
+          if (rep) achievementReports[cid] = rep;
+        } catch (e) { /* no report generated yet */ }
+      }
+    }
+    renderAll();
+  }
+
+  function renderAll() {
+    renderProfile();
+    renderPlanForm();
+    renderPlans();
+    renderSessions();
+    renderCycle();
+  }
+
+  /* ---------- 1. PROFILE / PROGRESS / PREVIOUS REPORT ---------- */
+  function renderProfile() {
+    var s = profile.student;
+    document.getElementById('pageTitle').textContent =
+      'Teaching flow — ' + s.first_name + (s.nickname ? ' (' + s.nickname + ')' : '');
+    var html = '<h2>' + esc(s.first_name) + (s.nickname ? ' (' + esc(s.nickname) + ')' : '') + '</h2>' +
+      '<p class="muted">' + esc(s.full_name || '') +
+      (s.track ? ' · ' + esc(s.track) : '') +
+      ' · Status: ' + esc(s.status) + '</p>' +
+      (s.notes ? '<p>' + esc(s.notes) + '</p>' : '');
+
+    /* Progress per assigned curriculum */
+    html += '<h3>Learning progress</h3>';
+    if (!profile.progress.length) {
+      html += '<p class="muted">No curricula assigned yet — assign one from <a href="students.html">Student Management</a> first.</p>';
+    } else {
+      profile.progress.forEach(function (p) {
+        var pct = p.cycle_length > 0 ? Math.min(100, Math.round(100 * p.completed_sessions / p.cycle_length)) : 0;
+        html += '<div class="progress-block"><p><strong>' + esc(p.curriculum_title || p.curriculum_id) + '</strong>' +
+          ' — ' + esc(p.completed_sessions) + ' of ' + esc(p.cycle_length) + ' sessions completed' +
+          (p.cycle_completed ? ' · <span class="status-badge status-published">Cycle complete</span>' : '') + '</p>' +
+          '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
+          '<p class="small muted">Objectives achieved — yes: ' + esc(p.outcomes.yes) +
+          ' · partially: ' + esc(p.outcomes.partially) + ' · no: ' + esc(p.outcomes.no) +
+          ' · planned sessions: ' + esc(p.planned_sessions) + '</p></div>';
+      });
+    }
+
+    /* Previous session report */
+    html += '<h3>Previous session report</h3>';
+    if (!profile.previous_reports.length) {
+      html += '<p class="muted">No end-session reports recorded yet.</p>';
+    } else {
+      var r = profile.previous_reports[0];
+      html += '<p><strong>' + esc(r.lesson_plan_title || 'Session') + '</strong>' +
+        (r.curriculum_title ? ' · ' + esc(r.curriculum_title) : '') +
+        ' · ' + esc(fmtDate(r.created_at)) + '</p>' +
+        (r.achievements ? '<p><strong>Achievements:</strong> ' + esc(r.achievements) + '</p>' : '') +
+        (r.challenges ? '<p><strong>Challenges:</strong> ' + esc(r.challenges) + '</p>' : '') +
+        (r.teacher_remarks ? '<p><strong>Teacher remarks:</strong> ' + esc(r.teacher_remarks) + '</p>' : '') +
+        (r.homework_next_steps ? '<p><strong>Homework &amp; next steps:</strong> ' + esc(r.homework_next_steps) + '</p>' : '') +
+        (profile.previous_reports.length > 1
+          ? '<p class="small"><a href="reports.html?student_id=' + esc(studentId) + '">See all ' + esc(profile.previous_reports.length) + ' reports &rarr;</a></p>' : '');
+    }
+    document.getElementById('profileSection').innerHTML = html;
+  }
+
+  /* ---------- 2. SELECT NEXT LESSON ---------- */
+  function renderPlanForm() {
+    var sel = document.getElementById('planCurriculum');
+    sel.innerHTML = (profile.progress || []).map(function (p) {
+      return '<option value="' + esc(p.curriculum_id) + '">' + esc(p.curriculum_title || p.curriculum_id) + '</option>';
+    }).join('');
+    if (!sel.value && sel.options.length) sel.selectedIndex = 0;
+    fillPlannedSessionSelect();
+    if (sel.value) loadLessonPicker(sel.value);
+  }
+
+  function fillPlannedSessionSelect() {
+    var sel = document.getElementById('planSession');
+    var planned = sessionDetails.filter(function (d) {
+      return d.session.status === 'planned' && !d.session.lesson_plan_id;
+    });
+    sel.innerHTML = '<option value="">— none, plan it after saving —</option>' + planned.map(function (d) {
+      return '<option value="' + esc(d.session.id) + '">Session ' + esc(d.session.session_number || '?') +
+        (d.session.scheduled_at ? ' · ' + esc(fmtDate(d.session.scheduled_at)) : '') + '</option>';
+    }).join('');
+  }
+
+  async function loadLessonPicker(curriculumId) {
+    var lessonSel = document.getElementById('planLesson');
+    lessonSel.innerHTML = '<option value="">— custom plan, no library lesson —</option>';
+    try {
+      curriculumDetail = await LMS.api('/api/curricula/' + encodeURIComponent(curriculumId));
+      var options = '';
+      curriculumDetail.modules.forEach(function (m) {
+        if (!(m.lessons || []).length) return;
+        options += '<optgroup label="' + esc(m.title) + '">' + m.lessons.map(function (l) {
+          return '<option value="' + esc(l.id) + '" data-title="' + esc(l.title) + '" data-objective="' + esc(l.objective || '') + '" data-activities="' + esc(l.activities_resources || '') + '" data-assessment="' + esc(l.assessment_criteria || '') + '">' + esc(l.title) + '</option>';
+        }).join('') + '</optgroup>';
+      });
+      lessonSel.innerHTML += options;
+    } catch (e) {
+      /* No library lessons for this curriculum — custom plan only. */
+    }
+  }
+
+  document.getElementById('planCurriculum').addEventListener('change', function (e) {
+    document.getElementById('planTitle').value = '';
+    loadLessonPicker(e.target.value);
+  });
+
+  document.getElementById('planLesson').addEventListener('change', function (e) {
+    var opt = e.target.options[e.target.selectedIndex];
+    if (opt && opt.value) {
+      document.getElementById('planTitle').value = opt.getAttribute('data-title') || '';
+      document.getElementById('planObjectives').value = opt.getAttribute('data-objective') || '';
+      document.getElementById('planActivities').value = opt.getAttribute('data-activities') || '';
+      document.getElementById('planAssessment').value = opt.getAttribute('data-assessment') || '';
+    }
+  });
+
+  document.getElementById('planForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    clearMessages();
+    var curriculumId = document.getElementById('planCurriculum').value;
+    var title = val('planTitle');
+    if (!curriculumId) { showError('Choose a curriculum first.'); return; }
+    if (!title) { showError('Plan title is required (pick a library lesson or type one).'); return; }
+    try {
+      var plan = await LMS.api('/api/students/' + encodeURIComponent(studentId) + '/lesson-plans', {
+        method: 'POST',
+        body: {
+          curriculum_id: curriculumId,
+          lesson_id: document.getElementById('planLesson').value || undefined,
+          title: title,
+          custom_objectives: val('planObjectives') || undefined,
+          custom_activities: val('planActivities') || undefined,
+          assessment_plan: val('planAssessment') || undefined,
+          materials: val('planMaterials') || undefined
+        }
+      });
+      var attachId = document.getElementById('planSession').value;
+      if (attachId) {
+        await LMS.api('/api/sessions/' + encodeURIComponent(attachId), {
+          method: 'PUT', body: { lesson_plan_id: plan.id }
+        });
+      }
+      e.target.reset();
+      await loadAll();
+      showSuccess('Lesson plan "' + plan.title + '" saved.');
+    } catch (err) {
+      showError('Could not save lesson plan: ' + err.message);
+    }
+  });
+
+  /* ---------- 3. LESSON PLANS ---------- */
+  function planStatusBadge(status) {
+    var labels = { draft: 'Draft', ready: 'Ready', in_progress: 'In progress', completed: 'Completed' };
+    return '<span class="status-badge status-' + (status === 'completed' ? 'published' : 'draft') + '">' + esc(labels[status] || status) + '</span>';
+  }
+
+  function renderPlans() {
+    var el = document.getElementById('plansList');
+    if (!plans.length) {
+      el.innerHTML = '<p class="muted">No lesson plans yet — create the first one above.</p>';
+      return;
+    }
+    el.innerHTML = plans.map(function (p) {
+      return '<div class="module"><h3>' + esc(p.title) + ' ' + planStatusBadge(p.status) + '</h3>' +
+        '<p class="muted small">' + esc(p.curriculum_title || '') +
+        (p.session_number != null ? ' · Session ' + esc(p.session_number) : '') + '</p>' +
+        (p.custom_objectives ? '<p><strong>Objectives:</strong> ' + esc(p.custom_objectives) + '</p>' : '') +
+        (p.custom_activities ? '<p><strong>Activities:</strong> ' + esc(p.custom_activities) + '</p>' : '') +
+        (p.assessment_plan ? '<p><strong>Assessment:</strong> ' + esc(p.assessment_plan) + '</p>' : '') +
+        (p.materials ? '<p><strong>Materials:</strong> ' + esc(p.materials) + '</p>' : '') +
+        '<p><button type="button" class="btn btn-small" data-plan-session="' + esc(p.id) + '">Plan a session</button> ' +
+        (p.status !== 'completed'
+          ? '<button type="button" class="btn btn-secondary btn-small" data-plan-status="' + esc(p.id) + '" data-status="completed">Mark completed</button> '
+          : '') +
+        '<button type="button" class="btn btn-danger btn-small" data-plan-delete="' + esc(p.id) + '">Delete plan</button></p></div>';
+    }).join('');
+  }
+
+  /* ---------- 4. SESSIONS ---------- */
+  function outcomeBadge(outcome) {
+    if (!outcome) return '<span class="muted">not evaluated yet</span>';
+    var labels = { yes: 'Yes — objectives achieved', partially: 'Partially achieved', no: 'No — objectives not achieved' };
+    var cls = outcome === 'yes' ? 'published' : 'draft';
+    return '<span class="status-badge status-' + cls + '">' + esc(labels[outcome] || outcome) + '</span>';
+  }
+
+  function renderSessions() {
+    var el = document.getElementById('sessionsList');
+    if (!sessionDetails.length) {
+      el.innerHTML = '<p class="muted">No sessions yet — plan one from a lesson plan above, or use “Plan next session” below.</p>';
+      return;
+    }
+    el.innerHTML = sessionDetails.map(function (d) {
+      var s = d.session;
+      var html = '<div class="module"><h3>Session ' + esc(s.session_number || '?') +
+        ' — ' + esc(d.lesson_plan ? d.lesson_plan.title : 'No lesson plan yet') + '</h3>' +
+        '<p class="muted small">' + esc(d.curriculum_title || '') +
+        ' · ' + esc(s.status) +
+        (s.scheduled_at ? ' · scheduled ' + esc(fmtDate(s.scheduled_at)) : '') +
+        (s.conducted_at ? ' · conducted ' + esc(fmtDate(s.conducted_at)) : '') + '</p>';
+
+      if (s.status === 'planned') {
+        html += '<p><button type="button" class="btn btn-small" data-conduct="' + esc(s.id) + '">Conduct teaching session</button></p>';
+        /* Attach a lesson plan to this planned session. */
+        var unattached = plans.filter(function (p) { return p.curriculum_id === s.curriculum_id; });
+        if (unattached.length) {
+          html += '<form class="inline-form" data-attach-plan="' + esc(s.id) + '">' +
+            '<div class="field"><label>Attach lesson plan</label><select name="plan">' +
+            unattached.map(function (p) {
+              return '<option value="' + esc(p.id) + '"' + (d.lesson_plan && p.id === d.lesson_plan.id ? ' selected' : '') + '>' + esc(p.title) + '</option>';
+            }).join('') + '</select></div>' +
+            '<button type="submit" class="btn btn-secondary btn-small">Attach</button></form>';
+        }
+        return html + '</div>';
+      }
+
+      /* --- Conducted: observe + evaluate --- */
+      var o = d.observation;
+      html += '<h4>Observe &amp; evaluate</h4>';
+      if (o) {
+        html += '<p>' + outcomeBadge(o.objectives_achieved) + '</p>' +
+          (o.observation ? '<p><strong>Observation:</strong> ' + esc(o.observation) + '</p>' : '') +
+          (o.performance_notes ? '<p><strong>Performance:</strong> ' + esc(o.performance_notes) + '</p>' : '') +
+          (o.objectives_evaluation ? '<p><strong>Evaluation:</strong> ' + esc(o.objectives_evaluation) + '</p>' : '');
+      }
+      html += '<form class="inline-form" data-observation-form="' + esc(s.id) + '"' + (o ? ' data-observation-id="' + esc(o.id) + '"' : '') + '>' +
+        '<div class="field"><label>Observation</label><input type="text" name="observation" maxlength="2000" value="' + esc(o ? o.observation || '' : '') + '" placeholder="What you observed"></div>' +
+        '<div class="field"><label>Performance notes</label><input type="text" name="performance_notes" maxlength="2000" value="' + esc(o ? o.performance_notes || '' : '') + '"></div>' +
+        '<div class="field"><label>Evaluate objectives</label><input type="text" name="objectives_evaluation" maxlength="2000" value="' + esc(o ? o.objectives_evaluation || '' : '') + '"></div>' +
+        '<div class="field"><label>Objectives achieved?</label><select name="objectives_achieved">' +
+        '<option value="">— not evaluated —</option>' +
+        ['yes', 'partially', 'no'].map(function (v) {
+          return '<option value="' + v + '"' + (o && o.objectives_achieved === v ? ' selected' : '') + '>' + v + '</option>';
+        }).join('') + '</select></div>' +
+        '<button type="submit" class="btn btn-small">' + (o ? 'Update observation' : 'Save observation') + '</button></form>';
+
+      /* --- Outcome branches --- */
+      if (o && o.objectives_achieved) {
+        if (o.objectives_achieved === 'yes') {
+          html += '<p><strong>Next step:</strong> proceed to the next lesson.</p>';
+        } else if (o.objectives_achieved === 'partially') {
+          html += '<p><strong>Next step:</strong> provide additional practice.</p>';
+        } else {
+          html += '<p><strong>Next step:</strong> create remedial activities.</p>';
+        }
+        var kind = o.objectives_achieved === 'partially' ? 'additional_practice' : (o.objectives_achieved === 'no' ? 'remedial' : null);
+        if (kind) {
+          html += '<form class="inline-form" data-practice-form="' + esc(s.id) + '" data-kind="' + kind + '">' +
+            '<div class="field"><label>' + (kind === 'additional_practice' ? 'Additional practice' : 'Remedial activity') + '</label>' +
+            '<input type="text" name="details" required maxlength="2000" placeholder="What the student should do"></div>' +
+            '<button type="submit" class="btn btn-small">Add</button></form>';
+        }
+        var items = d.practice_items || [];
+        if (items.length) {
+          html += '<ul class="item-list">' + items.map(function (it) {
+            return '<li><span class="grow"><strong>' + esc(it.kind === 'remedial' ? 'Remedial' : 'Additional practice') + ':</strong> ' +
+              esc(it.details) + ' <span class="muted">· ' + esc(it.status) + '</span></span>' +
+              (it.status !== 'done'
+                ? '<button type="button" class="btn btn-secondary btn-small" data-practice-done="' + esc(it.id) + '">Mark done</button> ' : '') +
+              '<button type="button" class="btn btn-danger btn-small" data-practice-delete="' + esc(it.id) + '">Delete</button></li>';
+          }).join('') + '</ul>';
+        }
+        html += '<p><button type="button" class="btn btn-small" data-plan-next="' + esc(s.curriculum_id) + '">Plan next session</button></p>';
+      }
+
+      /* --- End-session report --- */
+      var r = d.report;
+      html += '<h4>End-session report</h4>';
+      if (r) {
+        if (r.achievements) html += '<p><strong>Achievements:</strong> ' + esc(r.achievements) + '</p>';
+        if (r.challenges) html += '<p><strong>Challenges:</strong> ' + esc(r.challenges) + '</p>';
+        if (r.teacher_remarks) html += '<p><strong>Teacher remarks:</strong> ' + esc(r.teacher_remarks) + '</p>';
+        if (r.homework_next_steps) html += '<p><strong>Homework &amp; next steps:</strong> ' + esc(r.homework_next_steps) + '</p>';
+      }
+      html += '<form class="inline-form" data-report-form="' + esc(s.id) + '"' + (r ? ' data-report-id="' + esc(r.id) + '"' : '') + '>' +
+        '<div class="field"><label>Achievements</label><input type="text" name="achievements" maxlength="2000" value="' + esc(r ? r.achievements || '' : '') + '"></div>' +
+        '<div class="field"><label>Challenges</label><input type="text" name="challenges" maxlength="2000" value="' + esc(r ? r.challenges || '' : '') + '"></div>' +
+        '<div class="field"><label>Teacher remarks</label><input type="text" name="teacher_remarks" maxlength="2000" value="' + esc(r ? r.teacher_remarks || '' : '') + '"></div>' +
+        '<div class="field"><label>Homework &amp; next steps</label><input type="text" name="homework_next_steps" maxlength="2000" value="' + esc(r ? r.homework_next_steps || '' : '') + '"></div>' +
+        '<button type="submit" class="btn btn-small">' + (r ? 'Update report' : 'Save report') + '</button></form>';
+
+      /* --- Update skills & achievements --- */
+      html += '<h4>Update skills &amp; achievements</h4>' +
+        '<form class="inline-form" data-skill-form="' + esc(s.id) + '">' +
+        '<div class="field"><label>Skill level *</label><input type="text" name="level" required maxlength="100" placeholder="e.g. Beginner"></div>' +
+        '<div class="field"><label>Notes</label><input type="text" name="notes" maxlength="1000"></div>' +
+        '<button type="submit" class="btn btn-secondary btn-small">Add skill update</button></form>' +
+        '<form class="inline-form" data-portfolio-form="' + esc(s.id) + '">' +
+        '<div class="field"><label>Portfolio entry *</label><input type="text" name="title" required maxlength="200" placeholder="e.g. First working app"></div>' +
+        '<div class="field"><label>Description</label><input type="text" name="description" maxlength="2000"></div>' +
+        '<div class="field"><label>Evidence link</label><input type="text" name="evidence_link" maxlength="500" placeholder="Link to a screenshot or project"></div>' +
+        '<div class="field"><label>Evidence note</label><input type="text" name="evidence_note" maxlength="500" placeholder="What the evidence shows"></div>' +
+        '<button type="submit" class="btn btn-secondary btn-small">Add to portfolio</button></form>';
+
+      return html + '</div>';
+    }).join('');
+  }
+
+  /* ---------- 5. CYCLE CHECK & COMPLETION ---------- */
+  function renderCycle() {
+    var el = document.getElementById('cycleList');
+    if (!profile.progress.length) {
+      el.innerHTML = '<p class="muted">No curricula assigned yet.</p>';
+      return;
+    }
+    el.innerHTML = profile.progress.map(function (p) {
+      var fa = finalAssessments[p.curriculum_id];
+      var rep = achievementReports[p.curriculum_id];
+      var html = '<div class="module"><h3>' + esc(p.curriculum_title || p.curriculum_id) + '</h3>' +
+        '<p>' + esc(p.completed_sessions) + ' of ' + esc(p.cycle_length) + ' sessions completed. ' +
+        (p.cycle_completed
+          ? '<span class="status-badge status-published">Cycle complete</span>'
+          : ' ' + esc(p.sessions_remaining) + ' session(s) left — <a href="#sessionsSection">continue with the next lesson</a>.') + '</p>';
+      if (!p.cycle_completed) {
+        html += '<p><button type="button" class="btn btn-small" data-plan-next="' + esc(p.curriculum_id) + '">Plan next session</button></p>';
+        return html + '</div>';
+      }
+      /* Cycle complete: final assessment */
+      if (!fa) {
+        html += '<form class="form-card" data-final-form="' + esc(p.curriculum_id) + '"><h4>Final assessment</h4>' +
+          '<div class="field"><label>Summary</label><textarea name="summary" maxlength="2000" placeholder="Overall summary of the student’s performance across the cycle."></textarea></div>' +
+          '<div class="field"><label>Evaluate learning outcomes</label><textarea name="learning_outcomes_evaluation" maxlength="2000" placeholder="Were the learning outcomes met? What does the evidence show?"></textarea></div>' +
+          '<div class="field"><label>Teacher’s overall evaluation</label><textarea name="overall_evaluation" maxlength="2000" placeholder="Your overall evaluation of the student."></textarea></div>' +
+          '<button type="submit" class="btn">Save final assessment</button></form>';
+      } else {
+        html += '<h4>Final assessment</h4>' +
+          (fa.summary ? '<p><strong>Summary:</strong> ' + esc(fa.summary) + '</p>' : '') +
+          (fa.learning_outcomes_evaluation ? '<p><strong>Learning outcomes:</strong> ' + esc(fa.learning_outcomes_evaluation) + '</p>' : '') +
+          (fa.overall_evaluation ? '<p><strong>Overall evaluation:</strong> ' + esc(fa.overall_evaluation) + '</p>' : '') +
+          '<form class="inline-form" data-final-edit="' + esc(fa.id) + '">' +
+          '<div class="field"><label>Summary</label><input type="text" name="summary" maxlength="2000" value="' + esc(fa.summary || '') + '"></div>' +
+          '<div class="field"><label>Learning outcomes</label><input type="text" name="learning_outcomes_evaluation" maxlength="2000" value="' + esc(fa.learning_outcomes_evaluation || '') + '"></div>' +
+          '<div class="field"><label>Overall evaluation</label><input type="text" name="overall_evaluation" maxlength="2000" value="' + esc(fa.overall_evaluation || '') + '"></div>' +
+          '<button type="submit" class="btn btn-secondary btn-small">Update final assessment</button></form>' +
+          '<p><button type="button" class="btn" data-generate-report="' + esc(fa.id) + '">Generate achievement report</button> ' +
+          '<a class="btn btn-secondary" href="portfolio.html?student=' + esc(studentId) + '&amp;curriculum=' + esc(p.curriculum_id) + '">Open digital portfolio &rarr;</a></p>';
+        if (rep) {
+          html += '<h4>Achievement report</h4><pre class="report-text">' + esc(rep.content) + '</pre>' +
+            '<p class="small muted">Generated ' + esc(fmtDate(rep.created_at)) + ' — generate again to refresh it from the latest records.</p>';
+        }
+      }
+      return html + '</div>';
+    }).join('');
+  }
+
+  /* ---------- EVENTS (delegated) ---------- */
+  document.getElementById('plansSection').addEventListener('click', async function (e) {
+    var t = e.target.closest ? e.target.closest('[data-plan-session],[data-plan-status],[data-plan-delete]') : null;
+    if (!t) return;
+    clearMessages();
+    try {
+      if (t.hasAttribute('data-plan-session')) {
+        var planId = t.getAttribute('data-plan-session');
+        var plan = plans.filter(function (p) { return p.id === planId; })[0];
+        var session = await LMS.api('/api/lesson-plans/' + encodeURIComponent(planId) + '/sessions', {
+          method: 'POST', body: {}
+        });
+        if (plan && plan.status === 'draft') {
+          await LMS.api('/api/lesson-plans/' + encodeURIComponent(planId), { method: 'PUT', body: { status: 'ready' } });
+        }
+        await loadAll();
+        showSuccess('Planned session ' + (session.session_number || '') + ' for "' + (plan ? plan.title : '') + '".');
+      } else if (t.hasAttribute('data-plan-status')) {
+        await LMS.api('/api/lesson-plans/' + encodeURIComponent(t.getAttribute('data-plan-status')), {
+          method: 'PUT', body: { status: t.getAttribute('data-status') }
+        });
+        await loadAll();
+        showSuccess('Lesson plan marked completed.');
+      } else if (t.hasAttribute('data-plan-delete')) {
+        if (!confirm('Delete this lesson plan? Sessions and reports are kept, unlinked.')) return;
+        await LMS.api('/api/lesson-plans/' + encodeURIComponent(t.getAttribute('data-plan-delete')), { method: 'DELETE' });
+        await loadAll();
+        showSuccess('Lesson plan deleted.');
+      }
+    } catch (err) {
+      showError('Action failed: ' + err.message);
+    }
+  });
+
+  document.getElementById('sessionsSection').addEventListener('click', async function (e) {
+    var t = e.target.closest ? e.target.closest('[data-conduct],[data-plan-next],[data-practice-done],[data-practice-delete]') : null;
+    if (!t) return;
+    clearMessages();
+    try {
+      if (t.hasAttribute('data-conduct')) {
+        await LMS.api('/api/sessions/' + encodeURIComponent(t.getAttribute('data-conduct')), {
+          method: 'PUT', body: { status: 'conducted' }
+        });
+        await loadAll();
+        showSuccess('Session marked conducted — now observe, evaluate and record the report.');
+      } else if (t.hasAttribute('data-plan-next')) {
+        var ns = await LMS.api('/api/students/' + encodeURIComponent(studentId) + '/sessions', {
+          method: 'POST', body: { curriculum_id: t.getAttribute('data-plan-next') }
+        });
+        await loadAll();
+        showSuccess('Planned session ' + (ns.session_number || '') + '. Pick the next lesson above to attach it.');
+      } else if (t.hasAttribute('data-practice-done')) {
+        await LMS.api('/api/practice-items/' + encodeURIComponent(t.getAttribute('data-practice-done')), {
+          method: 'PUT', body: { status: 'done' }
+        });
+        await loadAll();
+      } else if (t.hasAttribute('data-practice-delete')) {
+        if (!confirm('Delete this item?')) return;
+        await LMS.api('/api/practice-items/' + encodeURIComponent(t.getAttribute('data-practice-delete')), { method: 'DELETE' });
+        await loadAll();
+      }
+    } catch (err) {
+      showError('Action failed: ' + err.message);
+    }
+  });
+
+  document.getElementById('sessionsSection').addEventListener('submit', async function (e) {
+    var f = e.target;
+    e.preventDefault();
+    clearMessages();
+    try {
+      if (f.hasAttribute('data-attach-plan')) {
+        await LMS.api('/api/sessions/' + encodeURIComponent(f.getAttribute('data-attach-plan')), {
+          method: 'PUT', body: { lesson_plan_id: f.elements['plan'].value }
+        });
+        await loadAll();
+        showSuccess('Lesson plan attached to the session.');
+      } else if (f.hasAttribute('data-observation-form')) {
+        var sid = f.getAttribute('data-observation-form');
+        var oid = f.getAttribute('data-observation-id');
+        var obody = {
+          observation: f.elements['observation'].value.trim() || undefined,
+          performance_notes: f.elements['performance_notes'].value.trim() || undefined,
+          objectives_evaluation: f.elements['objectives_evaluation'].value.trim() || undefined,
+          objectives_achieved: f.elements['objectives_achieved'].value || undefined
+        };
+        if (oid) {
+          await LMS.api('/api/observations/' + encodeURIComponent(oid), { method: 'PUT', body: obody });
+        } else {
+          await LMS.api('/api/sessions/' + encodeURIComponent(sid) + '/observations', { method: 'POST', body: obody });
+        }
+        await loadAll();
+        showSuccess('Observation saved.');
+      } else if (f.hasAttribute('data-practice-form')) {
+        await LMS.api('/api/sessions/' + encodeURIComponent(f.getAttribute('data-practice-form')) + '/practice-items', {
+          method: 'POST',
+          body: { kind: f.getAttribute('data-kind'), details: f.elements['details'].value.trim() }
+        });
+        await loadAll();
+        showSuccess('Item added.');
+      } else if (f.hasAttribute('data-report-form')) {
+        var rsid = f.getAttribute('data-report-form');
+        var rid = f.getAttribute('data-report-id');
+        var rbody = {
+          achievements: f.elements['achievements'].value.trim() || undefined,
+          challenges: f.elements['challenges'].value.trim() || undefined,
+          teacher_remarks: f.elements['teacher_remarks'].value.trim() || undefined,
+          homework_next_steps: f.elements['homework_next_steps'].value.trim() || undefined
+        };
+        if (rid) {
+          await LMS.api('/api/reports/' + encodeURIComponent(rid), { method: 'PUT', body: rbody });
+        } else {
+          await LMS.api('/api/sessions/' + encodeURIComponent(rsid) + '/report', { method: 'POST', body: rbody });
+        }
+        await loadAll();
+        showSuccess('End-session report saved.');
+      } else if (f.hasAttribute('data-skill-form')) {
+        var det = sessionDetails.filter(function (d) { return d.session.id === f.getAttribute('data-skill-form'); })[0];
+        await LMS.api('/api/students/' + encodeURIComponent(studentId) + '/assessments', {
+          method: 'POST',
+          body: {
+            level: f.elements['level'].value.trim(),
+            notes: f.elements['notes'].value.trim() || undefined,
+            curriculum_id: det ? det.session.curriculum_id : undefined
+          }
+        });
+        await loadAll();
+        showSuccess('Skill update added.');
+      } else if (f.hasAttribute('data-portfolio-form')) {
+        var det2 = sessionDetails.filter(function (d) { return d.session.id === f.getAttribute('data-portfolio-form'); })[0];
+        await LMS.api('/api/students/' + encodeURIComponent(studentId) + '/portfolio', {
+          method: 'POST',
+          body: {
+            title: f.elements['title'].value.trim(),
+            description: f.elements['description'].value.trim() || undefined,
+            curriculum_id: det2 ? det2.session.curriculum_id : undefined,
+            source: 'session',
+            source_id: f.getAttribute('data-portfolio-form'),
+            evidence_link: f.elements['evidence_link'].value.trim() || undefined,
+            evidence_note: f.elements['evidence_note'].value.trim() || undefined
+          }
+        });
+        await loadAll();
+        showSuccess('Added to the student’s portfolio.');
+      }
+    } catch (err) {
+      showError('Could not save: ' + err.message);
+    }
+  });
+
+  document.getElementById('cycleSection').addEventListener('click', async function (e) {
+    var t = e.target.closest ? e.target.closest('[data-plan-next],[data-generate-report]') : null;
+    if (!t) return;
+    clearMessages();
+    try {
+      if (t.hasAttribute('data-plan-next')) {
+        var ns = await LMS.api('/api/students/' + encodeURIComponent(studentId) + '/sessions', {
+          method: 'POST', body: { curriculum_id: t.getAttribute('data-plan-next') }
+        });
+        await loadAll();
+        showSuccess('Planned session ' + (ns.session_number || '') + '. Pick the next lesson above to attach it.');
+      } else if (t.hasAttribute('data-generate-report')) {
+        await LMS.api('/api/final-assessments/' + encodeURIComponent(t.getAttribute('data-generate-report')) + '/achievement-report', { method: 'POST' });
+        await loadAll();
+        showSuccess('Achievement report generated from the student’s records.');
+      }
+    } catch (err) {
+      showError('Action failed: ' + err.message);
+    }
+  });
+
+  document.getElementById('cycleSection').addEventListener('submit', async function (e) {
+    var f = e.target;
+    e.preventDefault();
+    clearMessages();
+    try {
+      if (f.hasAttribute('data-final-form')) {
+        var fa = await LMS.api('/api/students/' + encodeURIComponent(studentId) + '/final-assessments', {
+          method: 'POST',
+          body: {
+            curriculum_id: f.getAttribute('data-final-form'),
+            summary: f.elements['summary'].value.trim() || undefined,
+            learning_outcomes_evaluation: f.elements['learning_outcomes_evaluation'].value.trim() || undefined,
+            overall_evaluation: f.elements['overall_evaluation'].value.trim() || undefined
+          }
+        });
+        await loadAll();
+        showSuccess('Final assessment saved.');
+      } else if (f.hasAttribute('data-final-edit')) {
+        await LMS.api('/api/final-assessments/' + encodeURIComponent(f.getAttribute('data-final-edit')), {
+          method: 'PUT',
+          body: {
+            summary: f.elements['summary'].value.trim(),
+            learning_outcomes_evaluation: f.elements['learning_outcomes_evaluation'].value.trim(),
+            overall_evaluation: f.elements['overall_evaluation'].value.trim()
+          }
+        });
+        await loadAll();
+        showSuccess('Final assessment updated.');
+      }
+    } catch (err) {
+      showError('Could not save: ' + err.message);
+    }
+  });
+
+  /* ---------- INIT ---------- */
+  (async function init() {
+    if (!studentId) {
+      errorEl.textContent = 'No student selected — open this page from the Students list.';
+      errorEl.hidden = false;
+      return;
+    }
+    if (!(await LMS.requireAuth())) return;
+    try {
+      await loadAll();
+    } catch (err) {
+      errorEl.textContent = 'Could not load teaching flow: ' + err.message;
+      errorEl.hidden = false;
+    }
+  })();
+})();
+</script>
+</body>
+</html>

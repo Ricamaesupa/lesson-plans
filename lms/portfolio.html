@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Digital Portfolio | Lesson Plans LMS</title>
+<meta name="description" content="Teacher digital student portfolio for the CIY Club lesson-plan LMS.">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="lms.css">
+</head>
+<body data-nav="portfolio">
+<main class="wrap">
+<p class="kicker">Achievements &amp; Portfolio &middot; Completed Student Portfolio</p>
+<h1 id="pageTitle">Digital portfolio</h1>
+<p class="lede">Everything collected for this student and curriculum — session reports, assessment scores, completed projects, skills, the initial vs final comparison, the achievement report, and the portfolio entries with their evidence.</p>
+<p class="no-print">
+  <a id="backLink" href="students.html">&larr; Back to all students</a>
+  &nbsp;·&nbsp;
+  <button type="button" class="btn btn-small" id="printBtn">Save as PDF (print)</button>
+</p>
+<p class="note no-print">PDF: use your browser&rsquo;s print dialog and choose &ldquo;Save as PDF&rdquo;. No file is uploaded anywhere — evidence is links and notes only.</p>
+
+<p id="error" class="error no-print" hidden></p>
+<p id="success" class="success no-print" hidden></p>
+
+<div id="portfolioBody"><p class="muted">Loading portfolio…</p></div>
+
+<section id="addEntrySection" class="detail-block no-print">
+  <h2>Add portfolio entry</h2>
+  <form id="addEntryForm" class="form-card">
+    <div class="field">
+      <label for="entryTitle">Title *</label>
+      <input type="text" id="entryTitle" required maxlength="200" placeholder="e.g. Finished Website 1 — live homepage">
+    </div>
+    <div class="field">
+      <label for="entryDescription">Description</label>
+      <textarea id="entryDescription" maxlength="2000"></textarea>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label for="entryEvidenceLink">Evidence link</label>
+        <input type="text" id="entryEvidenceLink" maxlength="500" placeholder="Link to a screenshot, project or recording">
+      </div>
+      <div class="field">
+        <label for="entryEvidenceNote">Evidence note</label>
+        <input type="text" id="entryEvidenceNote" maxlength="500" placeholder="What the evidence shows">
+      </div>
+    </div>
+    <button type="submit" class="btn">Add to portfolio</button>
+  </form>
+</section>
+
+<footer class="foot no-print">Lesson Plans LMS &middot; Digital Portfolio (Phase 3).</footer>
+</main>
+<script src="app.js"></script>
+<script>
+(function () {
+  'use strict';
+  var esc = LMS.esc;
+  var errorEl = document.getElementById('error');
+  var successEl = document.getElementById('success');
+  var qs = new URLSearchParams(window.location.search);
+  var studentId = qs.get('student');
+  var curriculumId = qs.get('curriculum');
+  var data = null;
+
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.hidden = false;
+    successEl.hidden = true;
+  }
+  function showSuccess(msg) {
+    successEl.textContent = msg;
+    successEl.hidden = false;
+    errorEl.hidden = true;
+  }
+  function clearMessages() { errorEl.hidden = true; successEl.hidden = true; }
+  function fmtDate(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleDateString();
+  }
+
+  document.getElementById('printBtn').addEventListener('click', function () {
+    window.print();
+  });
+
+  function render() {
+    var s = data.student;
+    var c = data.curriculum;
+    document.getElementById('pageTitle').textContent =
+      'Portfolio — ' + s.first_name + (s.nickname ? ' (' + s.nickname + ')' : '') + ' · ' + c.title;
+    document.getElementById('backLink').href = 'student.html?id=' + encodeURIComponent(studentId);
+    var html = '';
+
+    /* Student records summary */
+    var p = data.progress;
+    html += '<section class="detail-block"><h2>Student records</h2>' +
+      '<p><strong>' + esc(s.first_name) + (s.nickname ? ' (' + esc(s.nickname) + ')' : '') + '</strong>' +
+      (s.full_name ? ' — ' + esc(s.full_name) : '') +
+      (s.track ? ' · ' + esc(s.track) : '') + '</p>' +
+      '<p>Curriculum: <strong>' + esc(c.title) + '</strong> — ' +
+      esc(p.completed_sessions) + ' of ' + esc(p.cycle_length) + ' sessions completed' +
+      (p.cycle_completed ? ' · cycle complete' : '') + '</p>' +
+      '<p class="small muted">Objectives achieved — yes: ' + esc(p.outcomes.yes) +
+      ' · partially: ' + esc(p.outcomes.partially) + ' · no: ' + esc(p.outcomes.no) + '</p></section>';
+
+    /* Collected session reports */
+    html += '<section class="detail-block"><h2>Session reports</h2>';
+    if (!data.session_reports.length) {
+      html += '<p class="muted">No end-session reports recorded yet.</p>';
+    } else {
+      html += data.session_reports.map(function (r) {
+        return '<p><strong>Session ' + esc(r.session_number || '?') +
+          (r.lesson_plan_title ? ' — ' + esc(r.lesson_plan_title) : '') + '</strong>' +
+          (r.objectives_achieved ? ' · objectives: ' + esc(r.objectives_achieved) : '') + '<br>' +
+          (r.achievements ? 'Achievements: ' + esc(r.achievements) + '<br>' : '') +
+          (r.challenges ? 'Challenges: ' + esc(r.challenges) + '<br>' : '') +
+          (r.homework_next_steps ? 'Homework &amp; next steps: ' + esc(r.homework_next_steps) : '') + '</p>';
+      }).join('');
+    }
+    html += '</section>';
+
+    /* Assessment scores */
+    html += '<section class="detail-block"><h2>Assessment scores</h2>';
+    if (!data.assessment_scores.outcomes.length) {
+      html += '<p class="muted">No session evaluations recorded yet.</p>';
+    } else {
+      html += '<ul class="item-list">' + data.assessment_scores.outcomes.map(function (o) {
+        return '<li><span class="grow">Session ' + esc(o.session_number || '?') + ': <strong>' +
+          esc(o.objectives_achieved) + '</strong>' +
+          (o.objectives_evaluation ? ' — ' + esc(o.objectives_evaluation) : '') + '</span></li>';
+      }).join('') + '</ul>';
+    }
+    html += '</section>';
+
+    /* Completed projects */
+    html += '<section class="detail-block"><h2>Completed projects</h2>';
+    var projects = data.completed_projects.lesson_plans;
+    var sessions = data.completed_projects.conducted_sessions;
+    if (!projects.length && !sessions.length) {
+      html += '<p class="muted">No completed projects recorded yet.</p>';
+    } else {
+      if (projects.length) {
+        html += '<ul class="item-list">' + projects.map(function (pr) {
+          return '<li><span class="grow"><strong>' + esc(pr.title) + '</strong>' +
+            (pr.custom_objectives ? '<br><span class="muted">' + esc(pr.custom_objectives) + '</span>' : '') + '</span></li>';
+        }).join('') + '</ul>';
+      }
+      if (sessions.length) {
+        html += '<p class="small">' + esc(sessions.length) + ' conducted session(s): ' +
+          esc(sessions.map(function (x) { return x.lesson_plan_title || ('Session ' + (x.session_number || '?')); }).join(', ')) + '</p>';
+      }
+    }
+    html += '</section>';
+
+    /* Skills & competencies + initial vs final */
+    html += '<section class="detail-block"><h2>Skills &amp; competencies</h2>';
+    if (!data.skills.length) {
+      html += '<p class="muted">No skill assessments recorded yet.</p>';
+    } else {
+      html += '<ul class="item-list">' + data.skills.map(function (sk) {
+        return '<li><span class="grow"><strong>' + esc(sk.level) + '</strong>' +
+          (sk.notes ? ' — ' + esc(sk.notes) : '') +
+          '<br><span class="muted">' + esc(fmtDate(sk.assessed_at)) + '</span></span></li>';
+      }).join('') + '</ul>';
+    }
+    html += '<h3>Initial vs final performance</h3>' +
+      '<p><strong>Initial:</strong> ' +
+      (data.initial_vs_final.initial
+        ? esc(data.initial_vs_final.initial.level) + (data.initial_vs_final.initial.notes ? ' — ' + esc(data.initial_vs_final.initial.notes) : '') + ' <span class="muted">(' + esc(fmtDate(data.initial_vs_final.initial.assessed_at)) + ')</span>'
+        : 'not recorded yet.') + '</p>' +
+      '<p><strong>Final:</strong> ' +
+      (data.initial_vs_final.final
+        ? esc(data.initial_vs_final.final.level) + (data.initial_vs_final.final.notes ? ' — ' + esc(data.initial_vs_final.final.notes) : '') + ' <span class="muted">(' + esc(fmtDate(data.initial_vs_final.final.assessed_at)) + ')</span>'
+        : 'not recorded yet.') + '</p></section>';
+
+    /* Evaluations + achievement report */
+    var fa = data.final_assessment;
+    html += '<section class="detail-block"><h2>Achievement report</h2>';
+    if (fa) {
+      if (fa.learning_outcomes_evaluation) html += '<p><strong>Evaluation of learning outcomes:</strong> ' + esc(fa.learning_outcomes_evaluation) + '</p>';
+      if (fa.overall_evaluation) html += '<p><strong>Teacher’s overall evaluation:</strong> ' + esc(fa.overall_evaluation) + '</p>';
+      if (fa.summary) html += '<p><strong>Final assessment summary:</strong> ' + esc(fa.summary) + '</p>';
+    } else {
+      html += '<p class="muted">No final assessment yet — the cycle must be complete first. Open the <a href="student.html?id=' + esc(studentId) + '">teaching flow</a> to record it.</p>';
+    }
+    if (data.latest_achievement_report) {
+      html += '<pre class="report-text">' + esc(data.latest_achievement_report.content) + '</pre>' +
+        '<p class="small muted">Generated ' + esc(fmtDate(data.latest_achievement_report.created_at)) + '.</p>';
+    } else {
+      html += '<p class="muted">No achievement report generated yet.</p>';
+    }
+    html += '</section>';
+
+    /* Digital portfolio entries */
+    html += '<section class="detail-block"><h2>Digital portfolio</h2>';
+    if (!data.portfolio_entries.length) {
+      html += '<p class="muted">No portfolio entries yet — add the first one below.</p>';
+    } else {
+      html += data.portfolio_entries.map(function (en) {
+        return '<div class="module"><h3>' + esc(en.title) + '</h3>' +
+          (en.description ? '<p>' + esc(en.description) + '</p>' : '') +
+          (en.evidence_link ? '<p>Evidence: <a href="' + esc(en.evidence_link) + '" target="_blank" rel="noopener">' + esc(en.evidence_link) + '</a></p>' : '') +
+          (en.evidence_note ? '<p class="small">Evidence note: ' + esc(en.evidence_note) + '</p>' : '') +
+          '<p class="no-print"><button type="button" class="btn btn-danger btn-small" data-entry-delete="' + esc(en.id) + '">Delete entry</button></p></div>';
+      }).join('');
+    }
+    html += '</section>';
+
+    document.getElementById('portfolioBody').innerHTML = html;
+  }
+
+  async function load() {
+    data = await LMS.api('/api/students/' + encodeURIComponent(studentId) +
+      '/portfolio-report?curriculum_id=' + encodeURIComponent(curriculumId));
+    render();
+  }
+
+  document.getElementById('addEntryForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    clearMessages();
+    var title = document.getElementById('entryTitle').value.trim();
+    if (!title) { showError('Title is required.'); return; }
+    try {
+      await LMS.api('/api/students/' + encodeURIComponent(studentId) + '/portfolio', {
+        method: 'POST',
+        body: {
+          title: title,
+          description: document.getElementById('entryDescription').value.trim() || undefined,
+          curriculum_id: curriculumId,
+          source: 'manual',
+          evidence_link: document.getElementById('entryEvidenceLink').value.trim() || undefined,
+          evidence_note: document.getElementById('entryEvidenceNote').value.trim() || undefined
+        }
+      });
+      e.target.reset();
+      await load();
+      showSuccess('Portfolio entry added.');
+    } catch (err) {
+      showError('Could not add portfolio entry: ' + err.message);
+    }
+  });
+
+  document.getElementById('portfolioBody').addEventListener('click', async function (e) {
+    var btn = e.target.closest ? e.target.closest('[data-entry-delete]') : null;
+    if (!btn) return;
+    if (!confirm('Delete this portfolio entry?')) return;
+    clearMessages();
+    try {
+      await LMS.api('/api/portfolio/' + encodeURIComponent(btn.getAttribute('data-entry-delete')), { method: 'DELETE' });
+      await load();
+      showSuccess('Portfolio entry deleted.');
+    } catch (err) {
+      showError('Could not delete entry: ' + err.message);
+    }
+  });
+
+  (async function init() {
+    if (!studentId || !curriculumId) {
+      errorEl.textContent = 'Choose a student and a curriculum first — open this page from the teaching flow.';
+      errorEl.hidden = false;
+      return;
+    }
+    if (!(await LMS.requireAuth())) return;
+    try {
+      await load();
+    } catch (err) {
+      errorEl.textContent = 'Could not load portfolio: ' + err.message;
+      errorEl.hidden = false;
+    }
+  })();
+})();
+</script>
+</body>
+</html>

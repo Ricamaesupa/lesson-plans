@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Curriculum Management | Lesson Plans LMS</title>
+<meta name="description" content="Teacher curriculum management for the CIY Club lesson-plan LMS.">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="lms.css">
+</head>
+<body data-nav="curriculum">
+<main class="wrap">
+<p class="kicker">Curriculum Management</p>
+<h1>Curriculum Library</h1>
+<p class="lede">Create curricula, modules and detailed lessons for the students.</p>
+<p class="note">Everything here is saved to the Curriculum Library automatically.</p>
+
+<p id="error" class="error" hidden></p>
+<p id="success" class="success" hidden></p>
+
+<!-- ============ LIST VIEW ============ -->
+<section id="listView">
+  <table class="ctable">
+    <thead>
+      <tr><th>Title</th><th>Subject</th><th>Total sessions</th><th>Modules</th><th>Lessons</th><th>Status</th><th>Public page</th></tr>
+    </thead>
+    <tbody id="curriculumRows">
+      <tr><td colspan="7" class="muted">Loading curricula…</td></tr>
+    </tbody>
+  </table>
+  <p class="count" id="curriculumCount"></p>
+
+  <form id="createForm" class="form-card">
+    <h2>Create Curriculum</h2>
+    <div class="field">
+      <label for="title">Title *</label>
+      <input type="text" id="title" name="title" required maxlength="200" placeholder="e.g. Scratch Star Collection Game">
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label for="subject">Subject</label>
+        <input type="text" id="subject" name="subject" maxlength="200" placeholder="e.g. Scratch">
+      </div>
+      <div class="field">
+        <label for="totalSessions">Total sessions</label>
+        <input type="number" id="totalSessions" name="total_sessions" min="0" step="1">
+      </div>
+    </div>
+    <div class="field">
+      <label for="cycleLength">Cycle length (sessions)</label>
+      <input type="number" id="cycleLength" name="cycle_length" min="1" step="1" placeholder="25">
+      <p class="hint">How many sessions make one full cycle — the &ldquo;Sessions Completed?&rdquo; check. Default 25.</p>
+    </div>
+    <div class="field">
+      <label for="description">Description</label>
+      <textarea id="description" name="description" maxlength="2000"></textarea>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label for="ageGroup">Age group</label>
+        <input type="text" id="ageGroup" name="age_group" maxlength="100" placeholder="e.g. 7–12">
+      </div>
+      <div class="field">
+        <label for="skillLevel">Skill level</label>
+        <input type="text" id="skillLevel" name="skill_level" maxlength="100" placeholder="e.g. Beginner">
+      </div>
+    </div>
+    <div class="field">
+      <label for="learningObjectives">Learning objectives</label>
+      <textarea id="learningObjectives" name="learning_objectives" maxlength="2000" placeholder="What the student will be able to do by the end of this curriculum."></textarea>
+    </div>
+    <div class="field">
+      <label for="publicPage">Public page</label>
+      <input type="text" id="publicPage" name="public_page" maxlength="200" placeholder="e.g. gin.html (optional)">
+      <p class="hint">File name of the matching public lesson-plan page, if there is one.</p>
+    </div>
+    <p class="hint">New curricula start as <strong>Draft</strong> — publish them from the detail view when they are ready to use.</p>
+    <button type="submit" class="btn">Create curriculum</button>
+  </form>
+</section>
+
+<!-- ============ DETAIL VIEW ============ -->
+<section id="detailView" hidden>
+  <p><button type="button" class="btn btn-secondary btn-small" id="backBtn">&larr; Back to the library</button></p>
+  <div id="detailBody"></div>
+</section>
+
+<footer class="foot">Lesson Plans LMS &middot; Curriculum Management (Phase 1).</footer>
+</main>
+<script src="app.js"></script>
+<script>
+(function () {
+  'use strict';
+  var esc = LMS.esc;
+  var errorEl = document.getElementById('error');
+  var successEl = document.getElementById('success');
+  var listView = document.getElementById('listView');
+  var detailView = document.getElementById('detailView');
+  var detailBody = document.getElementById('detailBody');
+  var curriculumRows = document.getElementById('curriculumRows');
+  var curriculumCount = document.getElementById('curriculumCount');
+  var current = null;          /* {curriculum, modules:[{..., lessons:[...]}]} */
+  var studentsCache = null;    /* [{id, first_name, nickname, ...}] — for Assign to Students */
+  var editingModuleId = null;
+  var editingLessonId = null;
+
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.hidden = false;
+    successEl.hidden = true;
+  }
+  function showSuccess(msg) {
+    successEl.textContent = msg;
+    successEl.hidden = false;
+    errorEl.hidden = true;
+  }
+  function clearMessages() { errorEl.hidden = true; successEl.hidden = true; }
+
+  function numOrEmpty(v) {
+    if (v === '' || v == null) return undefined;
+    var n = parseInt(v, 10);
+    return isNaN(n) ? undefined : n;
+  }
+
+  function statusBadge(status) {
+    var s = status === 'published' ? 'published' : 'draft';
+    var label = s === 'published' ? 'Published' : 'Draft';
+    return '<span class="status-badge status-' + s + '">' + label + '</span>';
+  }
+
+  /* ---------- LIST ---------- */
+  async function loadList() {
+    var list = await LMS.api('/api/curricula');
+    if (!list.length) {
+      curriculumRows.innerHTML = '<tr><td colspan="7" class="muted">No curricula yet — create the first one below.</td></tr>';
+    } else {
+      curriculumRows.innerHTML = list.map(function (c) {
+        return '<tr class="clickable" data-id="' + esc(c.id) + '">' +
+          '<td>' + esc(c.title) + '</td>' +
+          '<td>' + esc(c.subject || '') + '</td>' +
+          '<td>' + (c.total_sessions != null ? esc(c.total_sessions) : '') + '</td>' +
+          '<td>' + esc(c.module_count != null ? c.module_count : 0) + '</td>' +
+          '<td>' + esc(c.lesson_count != null ? c.lesson_count : 0) + '</td>' +
+          '<td>' + statusBadge(c.status) + '</td>' +
+          '<td>' + (c.public_page
+            ? '<a href="../' + esc(c.public_page) + '">' + esc(c.public_page) + '</a>'
+            : '<span class="muted">—</span>') + '</td></tr>';
+      }).join('');
+    }
+    curriculumCount.textContent = 'Showing ' + list.length + ' curricul' + (list.length === 1 ? 'um' : 'a');
+  }
+
+  curriculumRows.addEventListener('click', function (e) {
+    var tr = e.target.closest ? e.target.closest('tr[data-id]') : null;
+    if (tr) openDetail(tr.getAttribute('data-id'));
+  });
+
+  /* ---------- CREATE ---------- */
+  document.getElementById('createForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    clearMessages();
+    var body = {
+      title: document.getElementById('title').value.trim(),
+      subject: document.getElementById('subject').value.trim() || undefined,
+      description: document.getElementById('description').value.trim() || undefined,
+      total_sessions: numOrEmpty(document.getElementById('totalSessions').value),
+      cycle_length: numOrEmpty(document.getElementById('cycleLength').value),
+      age_group: document.getElementById('ageGroup').value.trim() || undefined,
+      skill_level: document.getElementById('skillLevel').value.trim() || undefined,
+      learning_objectives: document.getElementById('learningObjectives').value.trim() || undefined,
+      public_page: document.getElementById('publicPage').value.trim() || undefined
+    };
+    if (!body.title) { showError('Title is required.'); return; }
+    try {
+      var created = await LMS.api('/api/curricula', { method: 'POST', body: body });
+      e.target.reset();
+      await loadList();
+      showSuccess('Created curriculum "' + created.title + '" as a draft.');
+    } catch (err) {
+      showError('Could not create curriculum: ' + err.message);
+    }
+  });
+
+  /* ---------- DETAIL ---------- */
+  async function loadStudents() {
+    if (!studentsCache) studentsCache = await LMS.api('/api/students');
+    return studentsCache;
+  }
+
+  async function openDetail(id) {
+    clearMessages();
+    editingModuleId = null;
+    editingLessonId = null;
+    try {
+      await loadStudents();
+      current = await LMS.api('/api/curricula/' + encodeURIComponent(id));
+      renderDetail();
+      listView.hidden = true;
+      detailView.hidden = false;
+      window.scrollTo(0, 0);
+    } catch (err) {
+      showError('Could not open curriculum: ' + err.message);
+    }
+  }
+
+  async function reloadDetail() {
+    current = await LMS.api('/api/curricula/' + encodeURIComponent(current.curriculum.id));
+    renderDetail();
+  }
+
+  function renderDetail() {
+    var c = current.curriculum;
+    var html = '<h2>' + esc(c.title) + '</h2>' +
+      (c.description ? '<p>' + esc(c.description) + '</p>' : '') +
+      '<p class="muted">' +
+        (c.subject ? esc(c.subject) + ' · ' : '') +
+        (c.total_sessions != null ? esc(c.total_sessions) + ' sessions · ' : '') +
+        'Cycle: ' + esc(c.cycle_length != null ? c.cycle_length : 25) + ' sessions · ' +
+        (c.public_page ? 'Public page: <a href="../' + esc(c.public_page) + '">' + esc(c.public_page) + '</a> · ' : '') +
+        '</p>' +
+      (c.age_group ? '<p><strong>Age group:</strong> ' + esc(c.age_group) + '</p>' : '') +
+      (c.skill_level ? '<p><strong>Skill level:</strong> ' + esc(c.skill_level) + '</p>' : '') +
+      (c.learning_objectives ? '<p><strong>Learning objectives:</strong> ' + esc(c.learning_objectives) + '</p>' : '') +
+      '<p>Status: ' + statusBadge(c.status) + ' ' +
+        (c.status === 'published'
+          ? '<button type="button" class="btn btn-secondary btn-small" data-unpublish>Unpublish (back to draft)</button>'
+          : '<button type="button" class="btn btn-small" data-publish>Publish to library</button>') +
+      '</p>';
+
+    /* Assign to Students (flowchart: Publish to Curriculum Library -> Assign to Students).
+       Only published curricula can be assigned — the API rejects drafts with 409. */
+    if (c.status === 'published') {
+      html += '<form id="assignForm" class="form-card"><h3>Assign to Students</h3>' +
+        '<div class="form-row"><div class="field"><label for="assignStudent">Student</label>' +
+        '<select id="assignStudent">' +
+        (studentsCache || []).map(function (s) {
+          return '<option value="' + esc(s.id) + '">' + esc(s.nickname || s.first_name) + ' (' + esc(s.first_name) + ')</option>';
+        }).join('') +
+        '</select></div></div>' +
+        '<button type="submit" class="btn">Assign this curriculum</button></form>';
+    } else {
+      html += '<p class="note">Publish this curriculum before assigning it to students.</p>';
+    }
+
+    /* Edit curriculum form */
+    html += '<form id="editCurriculumForm" class="form-card"><h3>Edit curriculum</h3>' +
+      '<div class="field"><label for="editTitle">Title *</label>' +
+      '<input type="text" id="editTitle" required maxlength="200" value="' + esc(c.title) + '"></div>' +
+      '<div class="form-row"><div class="field"><label for="editSubject">Subject</label>' +
+      '<input type="text" id="editSubject" maxlength="200" value="' + esc(c.subject || '') + '"></div>' +
+      '<div class="field"><label for="editTotalSessions">Total sessions</label>' +
+      '<input type="number" id="editTotalSessions" min="0" step="1" value="' + esc(c.total_sessions != null ? c.total_sessions : '') + '"></div></div>' +
+      '<div class="field"><label for="editCycleLength">Cycle length (sessions)</label>' +
+      '<input type="number" id="editCycleLength" min="1" step="1" value="' + esc(c.cycle_length != null ? c.cycle_length : 25) + '">' +
+      '<p class="hint">How many sessions make one full cycle — the &ldquo;Sessions Completed?&rdquo; check.</p></div>' +
+      '<div class="field"><label for="editDescription">Description</label>' +
+      '<textarea id="editDescription" maxlength="2000">' + esc(c.description || '') + '</textarea></div>' +
+      '<div class="form-row"><div class="field"><label for="editAgeGroup">Age group</label>' +
+      '<input type="text" id="editAgeGroup" maxlength="100" value="' + esc(c.age_group || '') + '"></div>' +
+      '<div class="field"><label for="editSkillLevel">Skill level</label>' +
+      '<input type="text" id="editSkillLevel" maxlength="100" value="' + esc(c.skill_level || '') + '"></div></div>' +
+      '<div class="field"><label for="editLearningObjectives">Learning objectives</label>' +
+      '<textarea id="editLearningObjectives" maxlength="2000">' + esc(c.learning_objectives || '') + '</textarea></div>' +
+      '<div class="field"><label for="editPublicPage">Public page</label>' +
+      '<input type="text" id="editPublicPage" maxlength="200" value="' + esc(c.public_page || '') + '"></div>' +
+      '<button type="submit" class="btn">Save curriculum</button> ' +
+      '<button type="button" class="btn btn-danger" id="deleteCurriculumBtn">Delete curriculum</button>' +
+      '</form>';
+
+    /* Modules */
+    html += '<h3>Modules</h3>';
+    if (!current.modules.length) {
+      html += '<p class="muted">No modules yet — add the first one below.</p>';
+    }
+    current.modules.forEach(function (m) {
+      html += '<div class="module">';
+      if (editingModuleId === m.id) {
+        html += '<form class="inline-form" data-edit-module-form="' + esc(m.id) + '">' +
+          '<div class="field"><label>Module title *</label>' +
+          '<input type="text" name="title" required maxlength="200" value="' + esc(m.title) + '"></div>' +
+          '<div class="field"><label>Session count</label>' +
+          '<input type="number" name="session_count" min="0" step="1" value="' + esc(m.session_count != null ? m.session_count : '') + '"></div>' +
+          '<button type="submit" class="btn btn-small">Save</button>' +
+          '<button type="button" class="btn btn-secondary btn-small" data-cancel-edit>Cancel</button></form>';
+      } else {
+        html += '<h3>' + esc(m.title) +
+          (m.session_count != null ? ' <span class="muted">· ' + esc(m.session_count) + ' sessions</span>' : '') + '</h3>' +
+          '<p><button type="button" class="btn btn-secondary btn-small" data-edit-module="' + esc(m.id) + '">Edit</button> ' +
+          '<button type="button" class="btn btn-danger btn-small" data-delete-module="' + esc(m.id) + '">Delete</button></p>';
+      }
+      /* Lessons under this module */
+      html += '<ul class="lesson-list">';
+      (m.lessons || []).forEach(function (l) {
+        if (editingLessonId === l.id) {
+          html += '<li><form class="inline-form" data-edit-lesson-form="' + esc(l.id) + '" style="flex:1">' +
+            '<div class="field"><label>Lesson title *</label>' +
+            '<input type="text" name="title" required maxlength="200" value="' + esc(l.title) + '"></div>' +
+            '<div class="field"><label>Objective</label>' +
+            '<input type="text" name="objective" maxlength="1000" value="' + esc(l.objective || '') + '"></div>' +
+            '<div class="field"><label>Activities &amp; resources</label>' +
+            '<input type="text" name="activities_resources" maxlength="2000" value="' + esc(l.activities_resources || '') + '"></div>' +
+            '<div class="field"><label>Assessment criteria</label>' +
+            '<input type="text" name="assessment_criteria" maxlength="2000" value="' + esc(l.assessment_criteria || '') + '"></div>' +
+            '<div class="field"><label>Expected outputs</label>' +
+            '<input type="text" name="expected_outputs" maxlength="2000" value="' + esc(l.expected_outputs || '') + '"></div>' +
+            '<button type="submit" class="btn btn-small">Save</button>' +
+            '<button type="button" class="btn btn-secondary btn-small" data-cancel-edit>Cancel</button></form></li>';
+        } else {
+          html += '<li><span class="grow"><strong>' + esc(l.title) + '</strong>' +
+            (l.objective ? '<br><span class="muted">' + esc(l.objective) + '</span>' : '') +
+            (l.activities_resources ? '<br><span class="muted">Activities &amp; resources: ' + esc(l.activities_resources) + '</span>' : '') +
+            (l.assessment_criteria ? '<br><span class="muted">Assessment: ' + esc(l.assessment_criteria) + '</span>' : '') +
+            (l.expected_outputs ? '<br><span class="muted">Expected outputs: ' + esc(l.expected_outputs) + '</span>' : '') + '</span>' +
+            '<button type="button" class="btn btn-secondary btn-small" data-edit-lesson="' + esc(l.id) + '">Edit</button> ' +
+            '<button type="button" class="btn btn-danger btn-small" data-delete-lesson="' + esc(l.id) + '">Delete</button></li>';
+        }
+      });
+      html += '</ul>';
+      /* Add-lesson form */
+      html += '<form class="inline-form" data-add-lesson-form="' + esc(m.id) + '">' +
+        '<div class="field"><label>Add lesson</label>' +
+        '<input type="text" name="title" required maxlength="200" placeholder="Lesson title *"></div>' +
+        '<div class="field"><label>Objective</label>' +
+        '<input type="text" name="objective" maxlength="1000" placeholder="Optional"></div>' +
+        '<div class="field"><label>Activities &amp; resources</label>' +
+        '<input type="text" name="activities_resources" maxlength="2000" placeholder="Optional"></div>' +
+        '<div class="field"><label>Assessment criteria</label>' +
+        '<input type="text" name="assessment_criteria" maxlength="2000" placeholder="Optional"></div>' +
+        '<div class="field"><label>Expected outputs</label>' +
+        '<input type="text" name="expected_outputs" maxlength="2000" placeholder="Optional"></div>' +
+        '<button type="submit" class="btn btn-small">Add lesson</button></form>';
+      html += '</div>';
+    });
+
+    /* Add-module form */
+    html += '<form id="addModuleForm" class="form-card"><h3>Add module</h3>' +
+      '<div class="form-row"><div class="field"><label for="moduleTitle">Module title *</label>' +
+      '<input type="text" id="moduleTitle" required maxlength="200" placeholder="e.g. Phase 1 — Foundations"></div>' +
+      '<div class="field"><label for="moduleSessions">Session count</label>' +
+      '<input type="number" id="moduleSessions" min="0" step="1"></div></div>' +
+      '<button type="submit" class="btn">Add module</button></form>';
+
+    detailBody.innerHTML = html;
+  }
+
+  document.getElementById('backBtn').addEventListener('click', async function () {
+    current = null;
+    detailView.hidden = true;
+    listView.hidden = false;
+    clearMessages();
+    await loadList();
+  });
+
+  /* All detail-view actions are delegated from #detailBody. */
+  detailBody.addEventListener('click', async function (e) {
+    var t = e.target.closest ? e.target.closest('[data-edit-module],[data-delete-module],[data-edit-lesson],[data-delete-lesson],[data-cancel-edit],[data-publish],[data-unpublish],#deleteCurriculumBtn') : null;
+    if (!t || !current) return;
+    clearMessages();
+    try {
+      if (t.hasAttribute('data-cancel-edit')) {
+        editingModuleId = null; editingLessonId = null; renderDetail();
+      } else if (t.hasAttribute('data-publish')) {
+        var published = await LMS.api('/api/curricula/' + encodeURIComponent(current.curriculum.id) + '/publish', { method: 'POST' });
+        current.curriculum = published;
+        renderDetail();
+        showSuccess('Published "' + published.title + '" to the Curriculum Library. It can now be assigned to students.');
+      } else if (t.hasAttribute('data-unpublish')) {
+        var drafted = await LMS.api('/api/curricula/' + encodeURIComponent(current.curriculum.id) + '/unpublish', { method: 'POST' });
+        current.curriculum = drafted;
+        renderDetail();
+        showSuccess('"' + drafted.title + '" is back to draft. Existing assignments stay in place; new assignments need it published again.');
+      } else if (t.hasAttribute('data-edit-module')) {
+        editingModuleId = t.getAttribute('data-edit-module'); editingLessonId = null; renderDetail();
+      } else if (t.hasAttribute('data-edit-lesson')) {
+        editingLessonId = t.getAttribute('data-edit-lesson'); editingModuleId = null; renderDetail();
+      } else if (t.hasAttribute('data-delete-module')) {
+        if (!confirm('Delete this module and all its lessons?')) return;
+        await LMS.api('/api/modules/' + encodeURIComponent(t.getAttribute('data-delete-module')), { method: 'DELETE' });
+        await reloadDetail(); showSuccess('Module deleted.');
+      } else if (t.hasAttribute('data-delete-lesson')) {
+        if (!confirm('Delete this lesson?')) return;
+        await LMS.api('/api/lessons/' + encodeURIComponent(t.getAttribute('data-delete-lesson')), { method: 'DELETE' });
+        await reloadDetail(); showSuccess('Lesson deleted.');
+      } else if (t.id === 'deleteCurriculumBtn') {
+        if (!confirm('Delete the curriculum "' + current.curriculum.title + '" and all its modules and lessons?')) return;
+        await LMS.api('/api/curricula/' + encodeURIComponent(current.curriculum.id), { method: 'DELETE' });
+        current = null;
+        detailView.hidden = true;
+        listView.hidden = false;
+        await loadList();
+        showSuccess('Curriculum deleted.');
+      }
+    } catch (err) {
+      showError('Action failed: ' + err.message);
+    }
+  });
+
+  detailBody.addEventListener('submit', async function (e) {
+    if (!current) return;
+    var f = e.target;
+    e.preventDefault();
+    clearMessages();
+    try {
+      if (f.id === 'assignForm') {
+        var studentId = document.getElementById('assignStudent').value;
+        if (!studentId) { showError('Choose a student first.'); return; }
+        await LMS.api('/api/students/' + encodeURIComponent(studentId) + '/assign', {
+          method: 'POST',
+          body: { curriculum_id: current.curriculum.id }
+        });
+        var sName = (studentsCache || []).filter(function (s) { return s.id === studentId; })[0];
+        showSuccess('Assigned "' + current.curriculum.title + '" to ' + (sName ? (sName.nickname || sName.first_name) : 'the student') + '.');
+      } else if (f.id === 'editCurriculumForm') {
+        var title = document.getElementById('editTitle').value.trim();
+        if (!title) { showError('Title is required.'); return; }
+        var updated = await LMS.api('/api/curricula/' + encodeURIComponent(current.curriculum.id), {
+          method: 'PUT',
+          body: {
+            title: title,
+            subject: document.getElementById('editSubject').value.trim(),
+            description: document.getElementById('editDescription').value.trim(),
+            total_sessions: numOrEmpty(document.getElementById('editTotalSessions').value),
+            cycle_length: numOrEmpty(document.getElementById('editCycleLength').value),
+            age_group: document.getElementById('editAgeGroup').value.trim(),
+            skill_level: document.getElementById('editSkillLevel').value.trim(),
+            learning_objectives: document.getElementById('editLearningObjectives').value.trim(),
+            public_page: document.getElementById('editPublicPage').value.trim()
+          }
+        });
+        current.curriculum = updated;
+        renderDetail();
+        showSuccess('Curriculum saved.');
+      } else if (f.id === 'addModuleForm') {
+        var mTitle = document.getElementById('moduleTitle').value.trim();
+        if (!mTitle) { showError('Module title is required.'); return; }
+        await LMS.api('/api/curricula/' + encodeURIComponent(current.curriculum.id) + '/modules', {
+          method: 'POST',
+          body: { title: mTitle, session_count: numOrEmpty(document.getElementById('moduleSessions').value) }
+        });
+        await reloadDetail();
+        showSuccess('Module added.');
+      } else if (f.hasAttribute('data-add-lesson-form')) {
+        var moduleId = f.getAttribute('data-add-lesson-form');
+        var lTitle = f.elements['title'].value.trim();
+        if (!lTitle) { showError('Lesson title is required.'); return; }
+        await LMS.api('/api/modules/' + encodeURIComponent(moduleId) + '/lessons', {
+          method: 'POST',
+          body: {
+            title: lTitle,
+            objective: f.elements['objective'].value.trim() || undefined,
+            activities_resources: f.elements['activities_resources'].value.trim() || undefined,
+            assessment_criteria: f.elements['assessment_criteria'].value.trim() || undefined,
+            expected_outputs: f.elements['expected_outputs'].value.trim() || undefined
+          }
+        });
+        await reloadDetail();
+        showSuccess('Lesson added.');
+      } else if (f.hasAttribute('data-edit-module-form')) {
+        var emId = f.getAttribute('data-edit-module-form');
+        var emTitle = f.elements['title'].value.trim();
+        if (!emTitle) { showError('Module title is required.'); return; }
+        await LMS.api('/api/modules/' + encodeURIComponent(emId), {
+          method: 'PUT',
+          body: { title: emTitle, session_count: numOrEmpty(f.elements['session_count'].value) }
+        });
+        editingModuleId = null;
+        await reloadDetail();
+        showSuccess('Module saved.');
+      } else if (f.hasAttribute('data-edit-lesson-form')) {
+        var elId = f.getAttribute('data-edit-lesson-form');
+        var elTitle = f.elements['title'].value.trim();
+        if (!elTitle) { showError('Lesson title is required.'); return; }
+        await LMS.api('/api/lessons/' + encodeURIComponent(elId), {
+          method: 'PUT',
+          body: {
+            title: elTitle,
+            objective: f.elements['objective'].value.trim(),
+            activities_resources: f.elements['activities_resources'].value.trim(),
+            assessment_criteria: f.elements['assessment_criteria'].value.trim(),
+            expected_outputs: f.elements['expected_outputs'].value.trim()
+          }
+        });
+        editingLessonId = null;
+        await reloadDetail();
+        showSuccess('Lesson saved.');
+      }
+    } catch (err) {
+      showError('Could not save: ' + err.message);
+    }
+  });
+
+  /* ---------- INIT ---------- */
+  (async function init() {
+    if (!(await LMS.requireAuth())) return;
+    try {
+      await loadList();
+    } catch (err) {
+      errorEl.textContent = 'Could not load curricula: ' + err.message;
+      errorEl.hidden = false;
+    }
+  })();
+})();
+</script>
+</body>
+</html>

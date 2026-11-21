@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Student Management | Lesson Plans LMS</title>
+<meta name="description" content="Teacher student management for the CIY Club lesson-plan LMS.">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="lms.css">
+</head>
+<body data-nav="students">
+<main class="wrap">
+<p class="kicker">Student Management</p>
+<h1>Students</h1>
+<p class="lede">Register students, keep their profiles, assign curricula and assess their initial skill level.</p>
+
+<p id="error" class="error" hidden></p>
+<p id="success" class="success" hidden></p>
+
+<!-- ============ LIST VIEW ============ -->
+<section id="listView">
+  <table class="ctable">
+    <thead>
+      <tr><th>First name</th><th>Nickname</th><th>Track</th><th>Assigned curricula</th><th>Status</th></tr>
+    </thead>
+    <tbody id="studentRows">
+      <tr><td colspan="5" class="muted">Loading students…</td></tr>
+    </tbody>
+  </table>
+  <p class="count" id="studentCount"></p>
+
+  <form id="registerForm" class="form-card">
+    <h2>Register Student</h2>
+    <div class="form-row">
+      <div class="field">
+        <label for="firstName">First name *</label>
+        <input type="text" id="firstName" name="first_name" required maxlength="100">
+      </div>
+      <div class="field">
+        <label for="nickname">Nickname</label>
+        <input type="text" id="nickname" name="nickname" maxlength="100">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label for="fullName">Full name</label>
+        <input type="text" id="fullName" name="full_name" maxlength="200">
+      </div>
+      <div class="field">
+        <label for="track">Track</label>
+        <input type="text" id="track" name="track" maxlength="300" placeholder="e.g. MIT App Inventor">
+      </div>
+    </div>
+    <div class="field">
+      <label for="notes">Notes</label>
+      <textarea id="notes" name="notes" maxlength="2000"></textarea>
+    </div>
+    <button type="submit" class="btn">Register student</button>
+  </form>
+</section>
+
+<!-- ============ DETAIL VIEW ============ -->
+<section id="detailView" hidden>
+  <p><button type="button" class="btn btn-secondary btn-small" id="backBtn">&larr; Back to all students</button></p>
+  <h2 id="detailName"></h2>
+  <p class="muted" id="detailMeta"></p>
+  <p><a class="btn" id="teachingFlowLink" href="#">Open teaching flow &rarr;</a></p>
+
+  <form id="editForm" class="form-card">
+    <h3>Edit profile</h3>
+    <div class="form-row">
+      <div class="field">
+        <label for="editFirstName">First name *</label>
+        <input type="text" id="editFirstName" required maxlength="100">
+      </div>
+      <div class="field">
+        <label for="editNickname">Nickname</label>
+        <input type="text" id="editNickname" maxlength="100">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="field">
+        <label for="editFullName">Full name</label>
+        <input type="text" id="editFullName" maxlength="200">
+      </div>
+      <div class="field">
+        <label for="editTrack">Track</label>
+        <input type="text" id="editTrack" maxlength="300">
+      </div>
+    </div>
+    <div class="field">
+      <label for="editNotes">Notes</label>
+      <textarea id="editNotes" maxlength="2000"></textarea>
+    </div>
+    <div class="field">
+      <label for="editStatus">Status</label>
+      <select id="editStatus">
+        <option value="active">active</option>
+        <option value="inactive">inactive</option>
+      </select>
+    </div>
+    <button type="submit" class="btn">Save profile</button>
+  </form>
+
+  <div class="detail-block">
+    <h3>Assigned curricula</h3>
+    <ul class="item-list" id="assignmentList"></ul>
+    <form id="assignForm" class="inline-form">
+      <div class="field">
+        <label for="assignCurriculum">Assign curriculum</label>
+        <select id="assignCurriculum" required></select>
+      </div>
+      <button type="submit" class="btn">Assign</button>
+    </form>
+  </div>
+
+  <div class="detail-block">
+    <h3>Skill assessments</h3>
+    <ul class="item-list" id="assessmentList"></ul>
+    <form id="assessmentForm" class="inline-form">
+      <div class="field">
+        <label for="assessLevel">Level *</label>
+        <input type="text" id="assessLevel" required maxlength="100" placeholder="e.g. Beginner">
+      </div>
+      <div class="field">
+        <label for="assessCurriculum">Curriculum (optional)</label>
+        <select id="assessCurriculum"><option value="">— none —</option></select>
+      </div>
+      <div class="field">
+        <label for="assessNotes">Notes</label>
+        <input type="text" id="assessNotes" maxlength="1000">
+      </div>
+      <button type="submit" class="btn">Add assessment</button>
+    </form>
+    <p class="small">Assessments record the teacher&rsquo;s judgement of the student&rsquo;s initial skill level — nothing here is pre-filled.</p>
+  </div>
+
+  <div class="detail-block">
+    <h3>Delete student</h3>
+    <p class="small">Deleting removes the student, their curriculum assignments and their assessments. This cannot be undone.</p>
+    <button type="button" class="btn btn-danger" id="deleteStudentBtn">Delete student</button>
+  </div>
+</section>
+
+<footer class="foot">Lesson Plans LMS &middot; Student Management (Phase 1).</footer>
+</main>
+<script src="app.js"></script>
+<script>
+(function () {
+  'use strict';
+  var esc = LMS.esc;
+  var errorEl = document.getElementById('error');
+  var successEl = document.getElementById('success');
+  var listView = document.getElementById('listView');
+  var detailView = document.getElementById('detailView');
+  var studentRows = document.getElementById('studentRows');
+  var studentCount = document.getElementById('studentCount');
+  var curricula = [];      /* all curricula, for the assign/assessment selects */
+  var currentStudent = null;
+
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.hidden = false;
+    successEl.hidden = true;
+  }
+  function showSuccess(msg) {
+    successEl.textContent = msg;
+    successEl.hidden = false;
+    errorEl.hidden = true;
+  }
+  function clearMessages() { errorEl.hidden = true; successEl.hidden = true; }
+
+  function fmtDate(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleDateString();
+  }
+
+  /* ---------- LIST ---------- */
+  async function loadList() {
+    var students = await LMS.api('/api/students');
+    /* Assigned curricula are per-student, so fetch each detail in parallel. */
+    var details = await Promise.all(students.map(function (s) {
+      return LMS.api('/api/students/' + encodeURIComponent(s.id)).catch(function () { return null; });
+    }));
+    var assignedById = {};
+    details.forEach(function (d) {
+      if (!d) return;
+      assignedById[d.student.id] = d.assignments.map(function (a) { return a.curriculum_title; });
+    });
+    if (!students.length) {
+      studentRows.innerHTML = '<tr><td colspan="5" class="muted">No students yet — register the first one below.</td></tr>';
+    } else {
+      studentRows.innerHTML = students.map(function (s) {
+        var assigned = assignedById[s.id] || [];
+        return '<tr class="clickable" data-id="' + esc(s.id) + '">' +
+          '<td>' + esc(s.first_name) + '</td>' +
+          '<td>' + esc(s.nickname || '') + '</td>' +
+          '<td>' + esc(s.track || '') + '</td>' +
+          '<td>' + (assigned.length ? esc(assigned.join(', ')) : '<span class="muted">—</span>') + '</td>' +
+          '<td>' + esc(s.status) + '</td></tr>';
+      }).join('');
+    }
+    studentCount.textContent = 'Showing ' + students.length + ' student' + (students.length === 1 ? '' : 's');
+  }
+
+  studentRows.addEventListener('click', function (e) {
+    var tr = e.target.closest ? e.target.closest('tr[data-id]') : null;
+    if (tr) openDetail(tr.getAttribute('data-id'));
+  });
+
+  /* ---------- REGISTER ---------- */
+  document.getElementById('registerForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    clearMessages();
+    var body = {
+      first_name: document.getElementById('firstName').value.trim(),
+      nickname: document.getElementById('nickname').value.trim() || undefined,
+      full_name: document.getElementById('fullName').value.trim() || undefined,
+      track: document.getElementById('track').value.trim() || undefined,
+      notes: document.getElementById('notes').value.trim() || undefined
+    };
+    if (!body.first_name) { showError('First name is required.'); return; }
+    try {
+      var created = await LMS.api('/api/students', { method: 'POST', body: body });
+      e.target.reset();
+      await loadList();
+      showSuccess('Registered ' + created.first_name + '.');
+    } catch (err) {
+      showError('Could not register student: ' + err.message);
+    }
+  });
+
+  /* ---------- DETAIL ---------- */
+  function fillCurriculumSelects() {
+    var options = curricula.map(function (c) {
+      return '<option value="' + esc(c.id) + '">' + esc(c.title) + '</option>';
+    }).join('');
+    document.getElementById('assignCurriculum').innerHTML = options;
+    document.getElementById('assessCurriculum').innerHTML =
+      '<option value="">— none —</option>' + options;
+  }
+
+  async function openDetail(id) {
+    clearMessages();
+    try {
+      var data = await LMS.api('/api/students/' + encodeURIComponent(id));
+      currentStudent = data.student;
+      document.getElementById('detailName').textContent =
+        currentStudent.first_name + (currentStudent.nickname ? ' (' + currentStudent.nickname + ')' : '');
+      document.getElementById('teachingFlowLink').href = 'student.html?id=' + encodeURIComponent(currentStudent.id);
+      document.getElementById('detailMeta').textContent =
+        (currentStudent.full_name || '') +
+        (currentStudent.created_at ? ' · Added ' + fmtDate(currentStudent.created_at) : '');
+      document.getElementById('editFirstName').value = currentStudent.first_name || '';
+      document.getElementById('editNickname').value = currentStudent.nickname || '';
+      document.getElementById('editFullName').value = currentStudent.full_name || '';
+      document.getElementById('editTrack').value = currentStudent.track || '';
+      document.getElementById('editNotes').value = currentStudent.notes || '';
+      document.getElementById('editStatus').value = currentStudent.status || 'active';
+
+      var al = document.getElementById('assignmentList');
+      al.innerHTML = data.assignments.length ? data.assignments.map(function (a) {
+        return '<li><span class="grow"><strong>' + esc(a.curriculum_title) + '</strong>' +
+          ' <span class="muted">· ' + esc(a.status) + ' · since ' + esc(fmtDate(a.started_at)) + '</span></span>' +
+          '<button type="button" class="btn btn-secondary btn-small" data-remove-assignment="' + esc(a.id) + '">Remove</button></li>';
+      }).join('') : '<li class="muted">No curricula assigned yet.</li>';
+
+      var sl = document.getElementById('assessmentList');
+      sl.innerHTML = data.assessments.length ? data.assessments.map(function (a) {
+        return '<li><span class="grow"><strong>' + esc(a.level) + '</strong>' +
+          (a.curriculum_id ? ' <span class="muted">· ' + esc(curriculumTitle(a.curriculum_id)) + '</span>' : '') +
+          (a.notes ? '<br>' + esc(a.notes) : '') +
+          '<br><span class="muted">' + esc(fmtDate(a.assessed_at)) + '</span></span></li>';
+      }).join('') : '<li class="muted">No assessments yet.</li>';
+
+      listView.hidden = true;
+      detailView.hidden = false;
+      window.scrollTo(0, 0);
+    } catch (err) {
+      showError('Could not open student: ' + err.message);
+    }
+  }
+
+  function curriculumTitle(id) {
+    var c = curricula.find(function (x) { return x.id === id; });
+    return c ? c.title : id;
+  }
+
+  document.getElementById('backBtn').addEventListener('click', async function () {
+    currentStudent = null;
+    detailView.hidden = true;
+    listView.hidden = false;
+    clearMessages();
+    await loadList();
+  });
+
+  /* Edit profile */
+  document.getElementById('editForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    clearMessages();
+    if (!currentStudent) return;
+    var body = {
+      first_name: document.getElementById('editFirstName').value.trim(),
+      nickname: document.getElementById('editNickname').value.trim(),
+      full_name: document.getElementById('editFullName').value.trim(),
+      track: document.getElementById('editTrack').value.trim(),
+      notes: document.getElementById('editNotes').value.trim(),
+      status: document.getElementById('editStatus').value
+    };
+    if (!body.first_name) { showError('First name is required.'); return; }
+    try {
+      var updated = await LMS.api('/api/students/' + encodeURIComponent(currentStudent.id),
+        { method: 'PUT', body: body });
+      currentStudent = updated;
+      document.getElementById('detailName').textContent =
+        updated.first_name + (updated.nickname ? ' (' + updated.nickname + ')' : '');
+      showSuccess('Profile saved.');
+    } catch (err) {
+      showError('Could not save profile: ' + err.message);
+    }
+  });
+
+  /* Assign curriculum */
+  document.getElementById('assignForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    clearMessages();
+    if (!currentStudent) return;
+    var curriculumId = document.getElementById('assignCurriculum').value;
+    if (!curriculumId) { showError('Choose a curriculum to assign.'); return; }
+    try {
+      await LMS.api('/api/students/' + encodeURIComponent(currentStudent.id) + '/assign',
+        { method: 'POST', body: { curriculum_id: curriculumId } });
+      showSuccess('Curriculum assigned.');
+      await openDetail(currentStudent.id);
+    } catch (err) {
+      if (err.status === 409) showError('This student is already assigned to that curriculum.');
+      else showError('Could not assign curriculum: ' + err.message);
+    }
+  });
+
+  /* Remove assignment (delegated) */
+  document.getElementById('assignmentList').addEventListener('click', async function (e) {
+    var btn = e.target.closest ? e.target.closest('[data-remove-assignment]') : null;
+    if (!btn || !currentStudent) return;
+    if (!confirm('Remove this curriculum assignment?')) return;
+    clearMessages();
+    try {
+      await LMS.api('/api/students/' + encodeURIComponent(currentStudent.id) +
+        '/assign/' + encodeURIComponent(btn.getAttribute('data-remove-assignment')),
+        { method: 'DELETE' });
+      showSuccess('Assignment removed.');
+      await openDetail(currentStudent.id);
+    } catch (err) {
+      showError('Could not remove assignment: ' + err.message);
+    }
+  });
+
+  /* Add assessment */
+  document.getElementById('assessmentForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    clearMessages();
+    if (!currentStudent) return;
+    var level = document.getElementById('assessLevel').value.trim();
+    if (!level) { showError('Level is required.'); return; }
+    var body = {
+      level: level,
+      notes: document.getElementById('assessNotes').value.trim() || undefined,
+      curriculum_id: document.getElementById('assessCurriculum').value || undefined
+    };
+    try {
+      await LMS.api('/api/students/' + encodeURIComponent(currentStudent.id) + '/assessments',
+        { method: 'POST', body: body });
+      e.target.reset();
+      showSuccess('Assessment added.');
+      await openDetail(currentStudent.id);
+    } catch (err) {
+      showError('Could not add assessment: ' + err.message);
+    }
+  });
+
+  /* Delete student */
+  document.getElementById('deleteStudentBtn').addEventListener('click', async function () {
+    if (!currentStudent) return;
+    if (!confirm('Delete ' + currentStudent.first_name + '? This removes their assignments and assessments too.')) return;
+    clearMessages();
+    try {
+      await LMS.api('/api/students/' + encodeURIComponent(currentStudent.id), { method: 'DELETE' });
+      currentStudent = null;
+      detailView.hidden = true;
+      listView.hidden = false;
+      await loadList();
+      showSuccess('Student deleted.');
+    } catch (err) {
+      showError('Could not delete student: ' + err.message);
+    }
+  });
+
+  /* ---------- INIT ---------- */
+  (async function init() {
+    if (!(await LMS.requireAuth())) return;
+    try {
+      curricula = await LMS.api('/api/curricula');
+      fillCurriculumSelects();
+      await loadList();
+    } catch (err) {
+      errorEl.textContent = 'Could not load students: ' + err.message;
+      errorEl.hidden = false;
+    }
+  })();
+})();
+</script>
+</body>
+</html>

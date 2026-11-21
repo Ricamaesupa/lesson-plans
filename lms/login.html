@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teacher Login | Lesson Plans LMS</title>
+<meta name="description" content="Teacher login for the CIY Club lesson-plan LMS.">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="lms.css">
+</head>
+<body>
+<nav class="menubar"><a href="login.html" class="brand">Lesson Plans &middot; LMS</a></nav>
+<main class="wrap login-wrap">
+<p class="kicker">CIY Club &middot; Coach Rica Mae Supa</p>
+<h1>Teacher Login</h1>
+<p class="lede">This area is for the teacher only. Sign in to manage students and the curriculum library.</p>
+
+<p id="error" class="error" hidden></p>
+
+<form id="loginForm" class="form-card" autocomplete="off">
+  <div class="field">
+    <label for="password">Password</label>
+    <input type="password" id="password" name="password" required autocomplete="current-password" autofocus>
+  </div>
+  <button type="submit" class="btn" id="submitBtn">Log in</button>
+</form>
+
+<p class="small">If you have forgotten the password, it can only be reset where it is configured (Cloudflare environment variable <code>LMS_TEACHER_PASSWORD</code>).</p>
+</main>
+<script src="app.js"></script>
+<script>
+(function () {
+  'use strict';
+  var form = document.getElementById('loginForm');
+  var passwordInput = document.getElementById('password');
+  var submitBtn = document.getElementById('submitBtn');
+  var errorEl = document.getElementById('error');
+
+  function showError(msg) {
+    errorEl.textContent = msg;
+    errorEl.hidden = false;
+  }
+
+  /* Already signed in? Go straight to the dashboard. */
+  fetch('/api/auth/me', { credentials: 'same-origin' }).then(function (res) {
+    if (res.ok) window.location.href = '/lms/';
+  }).catch(function () { /* stay on the login page */ });
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    errorEl.hidden = true;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Logging in…';
+    try {
+      var res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: passwordInput.value }),
+        credentials: 'same-origin'
+      });
+      if (res.ok) {
+        window.location.href = '/lms/';
+        return;
+      }
+      if (res.status === 401) {
+        showError('Incorrect password');
+      } else if (res.status === 500) {
+        showError('Teacher login is not set up yet — set LMS_TEACHER_PASSWORD in Cloudflare');
+      } else {
+        showError('Login failed. Please try again.');
+      }
+      passwordInput.value = '';
+      passwordInput.focus();
+    } catch (err) {
+      showError('Could not reach the server. Please check your connection and try again.');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Log in';
+    }
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Session Management | Lesson Plans LMS</title>
+<meta name="description" content="Teacher teaching sessions for the CIY Club lesson-plan LMS.">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="lms.css">
+</head>
+<body data-nav="sessions">
+<main class="wrap">
+<p class="kicker">Session Management</p>
+<h1>Session Management</h1>
+<p class="lede">Every teaching session, planned or conducted — each one links back into that student&rsquo;s teaching flow, where it is conducted and recorded. Sessions are never copied here; this page only lists them.</p>
+
+<p id="error" class="error" hidden></p>
+
+<form id="filterForm" class="inline-form" aria-label="Filter sessions">
+  <div class="field">
+    <label for="filterStudent">Student</label>
+    <select id="filterStudent"><option value="">All students</option></select>
+  </div>
+  <div class="field">
+    <label for="filterCurriculum">Curriculum</label>
+    <select id="filterCurriculum"><option value="">All curricula</option></select>
+  </div>
+  <div class="field">
+    <label for="filterStatus">Status</label>
+    <select id="filterStatus">
+      <option value="">All statuses</option>
+      <option value="planned">Planned</option>
+      <option value="conducted">Conducted</option>
+    </select>
+  </div>
+</form>
+
+<section id="sessionsSection">
+  <p class="muted">Loading sessions…</p>
+</section>
+
+<footer class="foot">Lesson Plans LMS &middot; Session Management (Conduct and record classes).</footer>
+</main>
+<script src="app.js"></script>
+<script>
+(function () {
+  'use strict';
+  var esc = LMS.esc;
+  var errorEl = document.getElementById('error');
+  var sectionEl = document.getElementById('sessionsSection');
+  var studentSel = document.getElementById('filterStudent');
+  var curriculumSel = document.getElementById('filterCurriculum');
+  var statusSel = document.getElementById('filterStatus');
+
+  function fmtDate(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleDateString();
+  }
+
+  function render(sessions) {
+    if (!sessions.length) {
+      sectionEl.innerHTML = '<p class="muted">No teaching sessions planned yet — plan one from a student&rsquo;s teaching flow first.</p>';
+      return;
+    }
+    var rows = sessions.map(function (s) {
+      var name = s.student_nickname || s.student_first_name;
+      return '<tr><td>' + esc(name) + '</td>' +
+        '<td>' + esc(s.curriculum_title || '') + '</td>' +
+        '<td>' + esc(s.lesson_plan_title || '') + '</td>' +
+        '<td>' + esc(s.session_number != null ? s.session_number : '') + '</td>' +
+        '<td>' + esc(fmtDate(s.scheduled_at)) + '</td>' +
+        '<td>' + esc(fmtDate(s.conducted_at)) + '</td>' +
+        '<td>' + esc(s.status) + '</td>' +
+        '<td><a href="student.html?id=' + esc(s.student_id) + '">Open teaching flow &rarr;</a></td></tr>';
+    }).join('');
+    sectionEl.innerHTML = '<table class="ctable"><thead><tr>' +
+      '<th>Student</th><th>Curriculum</th><th>Lesson plan</th><th>Session #</th>' +
+      '<th>Scheduled</th><th>Conducted</th><th>Status</th><th></th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  async function load() {
+    var q = [];
+    if (studentSel.value) q.push('student_id=' + encodeURIComponent(studentSel.value));
+    if (curriculumSel.value) q.push('curriculum_id=' + encodeURIComponent(curriculumSel.value));
+    if (statusSel.value) q.push('status=' + encodeURIComponent(statusSel.value));
+    try {
+      var sessions = await LMS.api('/api/sessions' + (q.length ? '?' + q.join('&') : ''));
+      render(sessions);
+    } catch (err) {
+      errorEl.textContent = 'Could not load sessions: ' + err.message;
+      errorEl.hidden = false;
+    }
+  }
+
+  studentSel.addEventListener('change', load);
+  curriculumSel.addEventListener('change', load);
+  statusSel.addEventListener('change', load);
+
+  (async function init() {
+    if (!(await LMS.requireAuth())) return;
+    try {
+      var students = await LMS.api('/api/students');
+      students.forEach(function (s) {
+        var opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = s.first_name + (s.nickname ? ' (' + s.nickname + ')' : '');
+        studentSel.appendChild(opt);
+      });
+      var curricula = await LMS.api('/api/curricula');
+      curricula.forEach(function (c) {
+        var opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.title;
+        curriculumSel.appendChild(opt);
+      });
+    } catch (err) {
+      errorEl.textContent = 'Could not load filters: ' + err.message;
+      errorEl.hidden = false;
+    }
+    await load();
+  })();
+})();
+</script>
+</body>
+</html>

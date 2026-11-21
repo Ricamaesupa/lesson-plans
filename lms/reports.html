@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>End-Session Reports | Lesson Plans LMS</title>
+<meta name="description" content="Teacher end-session reports for the CIY Club lesson-plan LMS.">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="lms.css">
+</head>
+<body data-nav="reports">
+<main class="wrap">
+<p class="kicker">End-Session Reports</p>
+<h1>End-Session Reports</h1>
+<p class="lede">The teacher&rsquo;s session records — achievements, challenges, remarks and next steps after each conducted session. These are the LMS records, not the public parent-facing End Session Report page.</p>
+
+<p id="error" class="error" hidden></p>
+
+<section id="reportsSection">
+  <p class="muted">Loading reports…</p>
+</section>
+
+<footer class="foot">Lesson Plans LMS &middot; End-Session Reports (Phases 2 + 3).</footer>
+</main>
+<script src="app.js"></script>
+<script>
+(function () {
+  'use strict';
+  var esc = LMS.esc;
+  var errorEl = document.getElementById('error');
+  var studentId = new URLSearchParams(window.location.search).get('student_id');
+
+  function fmtDate(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleDateString();
+  }
+
+  (async function init() {
+    if (!(await LMS.requireAuth())) return;
+    try {
+      var url = '/api/reports' + (studentId ? '?student_id=' + encodeURIComponent(studentId) : '');
+      var reports = await LMS.api(url);
+      var el = document.getElementById('reportsSection');
+      if (!reports.length) {
+        el.innerHTML = '<p class="muted">No end-session reports recorded yet — conduct a session from a student’s teaching flow first.</p>';
+        return;
+      }
+      el.innerHTML = reports.map(function (r) {
+        var name = r.student_nickname || r.student_first_name;
+        return '<div class="module"><h3>' + esc(name) +
+          (r.lesson_plan_title ? ' — ' + esc(r.lesson_plan_title) : '') + '</h3>' +
+          '<p class="muted small">' + (r.curriculum_title ? esc(r.curriculum_title) + ' · ' : '') +
+          esc(fmtDate(r.created_at)) + '</p>' +
+          (r.achievements ? '<p><strong>Achievements:</strong> ' + esc(r.achievements) + '</p>' : '') +
+          (r.challenges ? '<p><strong>Challenges:</strong> ' + esc(r.challenges) + '</p>' : '') +
+          (r.teacher_remarks ? '<p><strong>Teacher remarks:</strong> ' + esc(r.teacher_remarks) + '</p>' : '') +
+          (r.homework_next_steps ? '<p><strong>Homework &amp; next steps:</strong> ' + esc(r.homework_next_steps) + '</p>' : '') +
+          '<p><a href="student.html?id=' + esc(r.student_id) + '">Open teaching flow &rarr;</a></p></div>';
+      }).join('');
+    } catch (err) {
+      errorEl.textContent = 'Could not load reports: ' + err.message;
+      errorEl.hidden = false;
+    }
+  })();
+})();
+</script>
+</body>
+</html>

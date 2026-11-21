@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>25-Session Roadmap | Lesson Plans LMS</title>
+<meta name="description" content="Teacher 25-session roadmap for the CIY Club lesson-plan LMS.">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="lms.css">
+</head>
+<body data-nav="roadmap">
+<main class="wrap">
+<p class="kicker">25-Session Roadmap</p>
+<h1>25-Session Roadmap</h1>
+<p class="lede">Future learning plans — one roadmap per student and assigned curriculum. Completed vs planned sessions, cycle progress against that curriculum&rsquo;s own cycle length, and the next planned sessions. This is a read view built from the lesson plans and sessions already recorded; nothing is entered here.</p>
+
+<p id="error" class="error" hidden></p>
+
+<section id="roadmapSection">
+  <p class="muted">Loading roadmap…</p>
+</section>
+
+<footer class="foot">Lesson Plans LMS &middot; 25-Session Roadmap (Future learning plans).</footer>
+</main>
+<script src="app.js"></script>
+<script>
+(function () {
+  'use strict';
+  var esc = LMS.esc;
+  var errorEl = document.getElementById('error');
+  var sectionEl = document.getElementById('roadmapSection');
+
+  function fmtDate(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleDateString();
+  }
+
+  function render(entries) {
+    if (!entries.length) {
+      sectionEl.innerHTML = '<p class="muted">No students assigned to a curriculum yet — assign a curriculum from the Students page first.</p>';
+      return;
+    }
+    sectionEl.innerHTML = entries.map(function (e) {
+      var name = e.student_nickname || e.student_first_name;
+      var pct = e.cycle_length > 0 ? Math.min(100, Math.round((e.completed_sessions / e.cycle_length) * 100)) : 0;
+      var html = '<div class="detail-block"><h2>' + esc(name) + ' — ' + esc(e.curriculum_title) + '</h2>' +
+        '<div class="progress-block"><div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>' +
+        '<p class="small">' + esc(e.completed_sessions) + ' of ' + esc(e.cycle_length) + ' sessions completed (' + pct + '%)' +
+        (e.cycle_completed ? ' · <strong>Cycle complete</strong>' : ' · ' + esc(e.sessions_remaining) + ' remaining') +
+        (e.planned_sessions ? ' · ' + esc(e.planned_sessions) + ' planned' : '') + '</p></div>';
+      if (e.next_planned_sessions.length) {
+        html += '<h3>Next planned sessions</h3><ul class="item-list">' +
+          e.next_planned_sessions.map(function (s) {
+            return '<li><span class="grow">Session ' + esc(s.session_number != null ? s.session_number : '?') +
+              (s.lesson_plan_title ? ' — ' + esc(s.lesson_plan_title) : '') +
+              (s.scheduled_at ? ' · ' + esc(fmtDate(s.scheduled_at)) : '') + '</span></li>';
+          }).join('') + '</ul>';
+      } else {
+        html += '<p class="muted">' + (e.cycle_completed ? 'Cycle complete — no sessions left to plan.' : 'No sessions planned yet.') + '</p>';
+      }
+      html += '<p><a href="student.html?id=' + esc(e.student_id) + '">Open teaching flow &rarr;</a></p></div>';
+      return html;
+    }).join('');
+  }
+
+  (async function init() {
+    if (!(await LMS.requireAuth())) return;
+    try {
+      var entries = await LMS.api('/api/roadmap');
+      render(entries);
+    } catch (err) {
+      errorEl.textContent = 'Could not load roadmap: ' + err.message;
+      errorEl.hidden = false;
+    }
+  })();
+})();
+</script>
+</body>
+</html>

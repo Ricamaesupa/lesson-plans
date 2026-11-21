@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lesson Planning | Lesson Plans LMS</title>
+<meta name="description" content="Teacher individual lesson plans for the CIY Club lesson-plan LMS.">
+<link rel="stylesheet" href="../styles.css">
+<link rel="stylesheet" href="lms.css">
+</head>
+<body data-nav="lesson-plans">
+<main class="wrap">
+<p class="kicker">Lesson Planning</p>
+<h1>Lesson Planning</h1>
+<p class="lede">Every individual lesson plan, across all students — each one links back into that student&rsquo;s teaching flow, where it was created. Plans are never copied here; this page only lists them.</p>
+
+<p id="error" class="error" hidden></p>
+
+<form id="filterForm" class="inline-form" aria-label="Filter lesson plans">
+  <div class="field">
+    <label for="filterStudent">Student</label>
+    <select id="filterStudent"><option value="">All students</option></select>
+  </div>
+  <div class="field">
+    <label for="filterCurriculum">Curriculum</label>
+    <select id="filterCurriculum"><option value="">All curricula</option></select>
+  </div>
+  <div class="field">
+    <label for="filterStatus">Status</label>
+    <select id="filterStatus">
+      <option value="">All statuses</option>
+      <option value="draft">Draft</option>
+      <option value="ready">Ready</option>
+      <option value="in_progress">In progress</option>
+      <option value="completed">Completed</option>
+    </select>
+  </div>
+</form>
+
+<section id="plansSection">
+  <p class="muted">Loading lesson plans…</p>
+</section>
+
+<footer class="foot">Lesson Plans LMS &middot; Lesson Planning (Individual lesson plans).</footer>
+</main>
+<script src="app.js"></script>
+<script>
+(function () {
+  'use strict';
+  var esc = LMS.esc;
+  var errorEl = document.getElementById('error');
+  var sectionEl = document.getElementById('plansSection');
+  var studentSel = document.getElementById('filterStudent');
+  var curriculumSel = document.getElementById('filterCurriculum');
+  var statusSel = document.getElementById('filterStatus');
+
+  function fmtDate(iso) {
+    if (!iso) return '';
+    var d = new Date(iso);
+    return isNaN(d) ? iso : d.toLocaleDateString();
+  }
+
+  function render(plans) {
+    if (!plans.length) {
+      sectionEl.innerHTML = '<p class="muted">No lesson plans yet — create one from a student&rsquo;s teaching flow first.</p>';
+      return;
+    }
+    var rows = plans.map(function (p) {
+      var name = p.student_nickname || p.student_first_name;
+      return '<tr><td>' + esc(name) + '</td>' +
+        '<td>' + esc(p.curriculum_title || '') + '</td>' +
+        '<td><a href="student.html?id=' + esc(p.student_id) + '">' + esc(p.title) + '</a></td>' +
+        '<td>' + esc(p.status) + '</td>' +
+        '<td>' + esc(p.session_number != null ? p.session_number : '') + '</td>' +
+        '<td>' + esc(fmtDate(p.created_at)) + '</td></tr>';
+    }).join('');
+    sectionEl.innerHTML = '<table class="ctable"><thead><tr>' +
+      '<th>Student</th><th>Curriculum</th><th>Plan</th><th>Status</th><th>Session #</th><th>Created</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  async function load() {
+    var q = [];
+    if (studentSel.value) q.push('student_id=' + encodeURIComponent(studentSel.value));
+    if (curriculumSel.value) q.push('curriculum_id=' + encodeURIComponent(curriculumSel.value));
+    if (statusSel.value) q.push('status=' + encodeURIComponent(statusSel.value));
+    try {
+      var plans = await LMS.api('/api/lesson-plans' + (q.length ? '?' + q.join('&') : ''));
+      render(plans);
+    } catch (err) {
+      errorEl.textContent = 'Could not load lesson plans: ' + err.message;
+      errorEl.hidden = false;
+    }
+  }
+
+  studentSel.addEventListener('change', load);
+  curriculumSel.addEventListener('change', load);
+  statusSel.addEventListener('change', load);
+
+  (async function init() {
+    if (!(await LMS.requireAuth())) return;
+    try {
+      var students = await LMS.api('/api/students');
+      students.forEach(function (s) {
+        var opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = s.first_name + (s.nickname ? ' (' + s.nickname + ')' : '');
+        studentSel.appendChild(opt);
+      });
+      var curricula = await LMS.api('/api/curricula');
+      curricula.forEach(function (c) {
+        var opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.title;
+        curriculumSel.appendChild(opt);
+      });
+    } catch (err) {
+      errorEl.textContent = 'Could not load filters: ' + err.message;
+      errorEl.hidden = false;
+    }
+    await load();
+  })();
+})();
+</script>
+</body>
+</html>
